@@ -14,8 +14,9 @@ object PingPong:
     Behaviors.setup: context =>
       Behaviors.receiveMessage:
         case Ping(ref) =>
-          context.log.info("Received Ping, sending Pong" + context.self)
+          context.log.info("Received Ping, sending Pong " + context.self)
           ref ! Pong(context.self)
+          //context.self ! Pong(context.self)
           ping()
         case Pong(_) =>
           context.log.info("Received Pong while in Ping state, ignoring")
@@ -25,7 +26,7 @@ object PingPong:
     Behaviors.setup: context =>
       Behaviors.receiveMessage:
         case Pong(ref) =>
-          context.log.info("Received Pong, sending Ping" + context.self)
+          context.log.info("Received Pong, sending Ping " + context.self)
           ref ! Ping(context.self)
           pong()
         case Ping(_) =>
@@ -33,6 +34,7 @@ object PingPong:
           Behaviors.same
 @main
 def multipleRuns(): Unit =
-  val pinger = startup("agario", 25251)(PingPong.ping())
-  val ponger = startup("agario", 25252)(PingPong.pong())
-  pinger ! PingPong.Ping(ponger)
+  import PingPong.*
+  val pinger = startup("agario", 25251)(ping())
+  val ponger = startup("agario", 25252)(pong())
+  pinger ! Ping(ponger)

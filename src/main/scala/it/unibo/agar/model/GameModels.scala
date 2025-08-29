@@ -14,7 +14,6 @@ sealed trait Entity:
     math.hypot(dx, dy)
 
 case class Player(id: String, x: Double, y: Double, mass: Double) extends Entity:
-
   def grow(entity: Entity): Player =
     copy(mass = mass + entity.mass)
 

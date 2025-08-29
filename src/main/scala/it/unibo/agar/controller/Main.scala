@@ -1,11 +1,13 @@
 package it.unibo.agar.controller
 
-import it.unibo.agar.model.AIMovement
-import it.unibo.agar.model.GameInitializer
-import it.unibo.agar.model.MockGameStateManager
-import it.unibo.agar.model.World
-import it.unibo.agar.view.GlobalView
-import it.unibo.agar.view.LocalView
+import akka.actor.typed.javadsl.Behaviors
+import akka.actor.typed.Behavior
+import it.unibo.agar.model.{AIMovement, GameInitializer, MockGameStateManager, World}
+import it.unibo.agar.distributed.AgarioProtocol.CreatePlayerMsg
+import it.unibo.agar.distributed.AgarioProtocol.CreatePlayerMsg.*
+import it.unibo.agar.distributed.GameCoordinator
+import it.unibo.agar.view.{GlobalView, LocalView}
+import it.unibo.agar.startupWithRole
 
 import java.awt.Window
 import java.util.Timer
@@ -17,9 +19,11 @@ object Main extends SimpleSwingApplication:
 
   private val width = 1000
   private val height = 1000
+
   private val numPlayers = 4
-  private val numFoods = 100
   private val players = GameInitializer.initialPlayers(numPlayers, width, height)
+
+  private val numFoods = 100
   private val foods = GameInitializer.initialFoods(numFoods, width, height)
   private val manager = new MockGameStateManager(World(width, height, players, foods))
 
@@ -38,3 +42,11 @@ object Main extends SimpleSwingApplication:
     new LocalView(manager, "p2").open()
     // No launcher window, just return an empty frame (or null if allowed)
     new Frame { visible = false }
+
+  override def main (args: Array[String]): Unit =
+    startupWithRole("Agario-System", 25251)(systemBehavior)
+
+  private def systemBehavior: Behavior[CreatePlayerMsg] =
+    Behaviors.setup : ctx =>
+      ctx.spawn(GameCoordinator())
+

@@ -1,6 +1,6 @@
 ThisBuild / version := "0.1.0-SNAPSHOT"
 
-ThisBuild / scalaVersion := "3.3.6"
+ThisBuild / scalaVersion := "3.3.3"
 resolvers += "Akka library repository".at("https://repo.akka.io/maven")
 lazy val akkaVersion = "2.10.5"
 lazy val root = (project in file("."))

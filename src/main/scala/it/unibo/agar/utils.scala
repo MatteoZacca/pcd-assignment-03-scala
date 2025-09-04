@@ -6,14 +6,14 @@ import com.typesafe.config.ConfigFactory
 
 val seeds = List(2551, 2552) // seed used in the configuration
 
-def startup[X](file: String = "base-cluster", port: Int)(root: => Behavior[X]): ActorSystem[X] =
+def startup[X](name: String, port: Int)(root: => Behavior[X]): ActorSystem[X] =
   // Override the configuration of the port
   val config = ConfigFactory
     .parseString(s"""akka.remote.artery.canonical.port=$port""")
-    .withFallback(ConfigFactory.load(file))
+    .withFallback(ConfigFactory.load("agario"))
 
   // Create an Akka system
-  ActorSystem(root, file, config)
+  ActorSystem(root, "agar-system-" + name, config)
 
 def startupWithRole[X](role: String, port: Int)(root: => Behavior[X]): ActorSystem[X] =
   val config = ConfigFactory
@@ -21,7 +21,7 @@ def startupWithRole[X](role: String, port: Int)(root: => Behavior[X]): ActorSyst
       akka.remote.artery.canonical.port=$port
       akka.cluster.roles = [$role]
       """)
-    .withFallback(ConfigFactory.load("base-cluster"))
+    .withFallback(ConfigFactory.load("agario"))
 
   // Create an Akka system
-  ActorSystem(root, "ClusterSystem", config)
+  ActorSystem(root, "agar-system", config)

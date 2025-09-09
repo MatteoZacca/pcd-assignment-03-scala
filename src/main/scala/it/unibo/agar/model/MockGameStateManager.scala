@@ -30,7 +30,8 @@ class MockGameStateManager(
     val newX = (player.x + dx * speed).max(0).min(world.width)
     val newY = (player.y + dy * speed).max(0).min(world.height)
     player.copy(x = newX, y = newY)
-
+  
+  
   private def updateWorldAfterMovement(player: Player): World =
     val foodEaten = world.foods.filter(food => EatingManager.canEatFood(player, food))
     val playerEatsFood = foodEaten.foldLeft(player)((p, food) => p.grow(food))
@@ -42,3 +43,5 @@ class MockGameStateManager(
       .updatePlayer(playerEatPlayers)
       .removePlayers(playersEaten)
       .removeFoods(foodEaten)
+      
+  

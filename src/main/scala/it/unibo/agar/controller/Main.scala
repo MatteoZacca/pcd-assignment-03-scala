@@ -1,17 +1,16 @@
 package it.unibo.agar.controller
 
-import akka.cluster.typed.{ClusterSingleton, SingletonActor}
+import akka.cluster.typed.{ClusterSingleton, SingletonActor, Cluster}
+import akka.cluster.singleton.ClusterSingletonProxy
 import akka.actor.typed.{ActorSystem, Behavior}
 import akka.actor.typed.scaladsl.Behaviors
-import akka.cluster.Cluster
-
 import it.unibo.agar.distributed.GameManager
-import it.unibo.agar.model.AIMovement
-import it.unibo.agar.model.GameInitializer
-import it.unibo.agar.model.MockGameStateManager
-import it.unibo.agar.model.World
+import it.unibo.agar.model.{AIMovement, GameInitializer, MockGameStateManager, Player, World}
 import it.unibo.agar.view.GlobalView
 import it.unibo.agar.view.LocalView
+import it.unibo.agar.*
+import it.unibo.agar.distributed.players.*
+import it.unibo.agar.distributed.GlobalViewActor
 
 import java.awt.Window
 import java.util.Timer
@@ -19,19 +18,21 @@ import java.util.TimerTask
 import scala.swing.*
 import scala.swing.Swing.onEDT
 
-object Main extends SimpleSwingApplication:
+object Main: //extends SimpleSwingApplication:
 
-  private val width = 1000
-  private val height = 1000
+  val width = 1000
+  val height = 1000
 
   private val numPlayers = 4
-  private val players = GameInitializer.initialPlayers(numPlayers, width, height)
+  val players = Seq.empty[Player]
+  //private val players = GameInitializer.initialPlayers(numPlayers, width, height)
 
-  private val numFoods = 100
-  private val foods = GameInitializer.initialFoods(numFoods, width, height)
+  val numFoods = 100
+  val foods = GameInitializer.initialFoods(numFoods, width, height)
 
-  private val manager = new MockGameStateManager(World(width, height, players, foods))
+  //private val manager = new MockGameStateManager(World(width, height, players, foods))
 
+  /*
   private val timer = new Timer()
   private val task: TimerTask = new TimerTask:
     override def run(): Unit =
@@ -39,7 +40,9 @@ object Main extends SimpleSwingApplication:
       manager.tick()
       onEDT(Window.getWindows.foreach(_.repaint()))
   timer.scheduleAtFixedRate(task, 0, 30) // every 30ms
+  */
 
+  /*
   override def top: Frame =
     // Open both views at startup
     new GlobalView(manager).open()
@@ -47,33 +50,47 @@ object Main extends SimpleSwingApplication:
     new LocalView(manager, "p2").open()
     // No launcher window, just return an empty frame (or null if allowed)
     new Frame { visible = false }
+  */
 
-  // mainManager port = 25251
-  @main def mainManager(port: String): Unit =
-    val system = startup("manager", port)(
+
+  @main def mainManager(): Unit =
+    // seeds.head() must return port 25251
+    val system = startupWithRole("manager", 25251)(
       Behaviors.setup { ctx =>
+        val globalView = new GlobalView(width, height, players, foods)
+
         val gm = GameManager(width, height, players, foods)
-        ClusterSingleton(ctx.system).init(SingletonActor(gm, "GameManager"))
-        
-        new GlobalView(gm).open
-        
+        val gmRef = ClusterSingleton(ctx.system).init(SingletonActor(gm, "GameManager"))
+
+        ctx.spawn(GlobalViewActor(globalView, gmRef), "global-view-actor")
+
+        onEDT:
+          globalView.open()
+
         Behaviors.empty
       }
     )
-    
-  /** Idea:   nel momento in cui creo il manager, creo anche la global view, quindi compare
-   * schermata del mondo, ma senza giocatori */
 
   // userId examples: user-1, user-2,...
-  @main def mainUser(userId: String, port: Int): Unit =
-    val system = startup(userId, port)(Behaviors.empty)
+  @main def mainUser(userId: String): Unit =
+    val system = startupWithRole("user", 0)(Behaviors.empty)
     val gmProxy = ClusterSingleton(system).init(
-      SingletonActor(Behaviors.empty)
+      SingletonActor(Behaviors.empty, "GameManager")
     )
-    new LocalView().open()
+    system.systemActorOf(UserActor(gmProxy, userId), userId)
 
-  @main def mainAIPlayer(): Unit =
-    startup("aiplayer-1", 0)(Behaviors.empty)
-    startup("aiplayer-2", 0)(Behaviors.empty)
+  // AIPlayerId examples: aiplayer-1, aiplayer-2
+  // port: 0
+  /*
+  @main def mainAIPlayer(aiId: String, port: Int): Unit =
+    val system = startupWithRole("aiplayer", 0)(Behaviors.empty)
+    val gmProxy = ClusterSingleton(system).init(
+      SingletonActor(Behaviors.empty, "GameManager")
+    )
+    system.systemActorOf(AIPlayer(aiId, gmProxy), s"$aiId")
+
+   */
+
+
 
 

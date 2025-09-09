@@ -13,7 +13,7 @@ def startup[X](name: String, port: Int)(root: => Behavior[X]): ActorSystem[X] =
     .withFallback(ConfigFactory.load("agario"))
 
   // Create an Akka system
-  ActorSystem(root, "agar-system-" + name, config)
+  ActorSystem(root, "agario", config)
 
 def startupWithRole[X](role: String, port: Int)(root: => Behavior[X]): ActorSystem[X] =
   val config = ConfigFactory
@@ -24,4 +24,4 @@ def startupWithRole[X](role: String, port: Int)(root: => Behavior[X]): ActorSyst
     .withFallback(ConfigFactory.load("agario"))
 
   // Create an Akka system
-  ActorSystem(root, "agar-system", config)
+  ActorSystem(root, "agario", config)

@@ -61,8 +61,9 @@ object Main: //extends SimpleSwingApplication:
 
         val gm = GameManager(width, height, players, foods)
         val gmRef = ClusterSingleton(ctx.system).init(SingletonActor(gm, "GameManager"))
-
-        ctx.spawn(GlobalViewActor(globalView, gmRef), "global-view-actor")
+        /** Pensa a una soluzione per la creazione del ClusterSingletonProxy */
+        val gvActorRef = ctx.spawn(GlobalViewActor(globalView, gmRef), "global-view-actor")
+        println("\n\ngvActorRef: " + gvActorRef + "\n\n")
 
         onEDT:
           globalView.open()
@@ -76,8 +77,10 @@ object Main: //extends SimpleSwingApplication:
     val system = startupWithRole("user", 0)(Behaviors.empty)
     val gmProxy = ClusterSingleton(system).init(
       SingletonActor(Behaviors.empty, "GameManager")
-    )
-    system.systemActorOf(UserActor(gmProxy, userId), userId)
+    ) /* Akka riconosce che nel cluster c'è già un singleton registrato con il nome 
+    GameManager, quindi otteniamo un ClusterSingletonProxy */
+    val userActorRef = system.systemActorOf(UserActor(userId, gmProxy), userId)
+    println("\n\nuserActorRef: " + userActorRef + "\n\n")
 
   // AIPlayerId examples: aiplayer-1, aiplayer-2
   // port: 0

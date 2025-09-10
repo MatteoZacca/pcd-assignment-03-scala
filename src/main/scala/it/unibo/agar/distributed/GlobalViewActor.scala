@@ -5,13 +5,13 @@ import akka.actor.typed.scaladsl.Behaviors
 import it.unibo.agar.view.GlobalView
 import it.unibo.agar.view.LocalView
 import akka.actor.typed.ActorRef
-import it.unibo.agar.distributed.GameManager.*
+import it.unibo.agar.distributed.GameProtocol.*
 
 import scala.swing.Swing
 
 object GlobalViewActor:
 
-  def apply(globalView: GlobalView, gmProxy: ActorRef[GameManager.Command]): Behavior[WorldSnapshot] =
+  def apply(globalView: GlobalView, gmProxy: ActorRef[GameMessage]): Behavior[WorldSnapshot] =
     Behaviors.setup { ctx =>
       gmProxy ! RegisterView(ctx.self)
 

@@ -1,33 +1,31 @@
 package it.unibo.agar.distributed.players
 
 import akka.actor.typed.{ActorRef, ActorSystem, Behavior}
-import akka.actor.typed.javadsl.Behaviors
-import it.unibo.agar.distributed.GameManager.{WorldSnapshot, RegisterView, RegisterPlayer}
-import it.unibo.agar.distributed.GameManager.Command
+import akka.actor.typed.scaladsl.Behaviors
+import it.unibo.agar.distributed.GameProtocol.*
+import it.unibo.agar.distributed.GameManager
+import it.unibo.agar.controller.Main
 import it.unibo.agar.view.LocalView
 
 import scala.swing.Swing.*
 
 object UserActor:
-  
-  def apply(gmProxy: ActorRef[Command], userId: String): Behavior[Any] =
-    Behaviors.setup { ctx =>
-      val view = new LocalView(userId, Some(gmProxy)) /** perchè some? */
-      onEDT(view.open())
 
-      val adapter = ctx.spawn(
-        Behaviors.receiveMessage {
-          case WorldSnapshot(world) =>
-            onEDT {
-              view.snapUpdateWorld(world)
-            }
-            Behaviors.same
-        },
-        s"view-adapter-${userId}"
-      )
-      
-      gmProxy ! RegisterView(adapter)
-      gmProxy ! RegisterPlayer(userId, Some(adapter))
-      
-      Behaviors.empty
+  def apply(userId: String, gmProxy: ActorRef[GameMessage]): Behavior[WorldSnapshot] =
+    Behaviors.setup { ctx =>
+      val view = new LocalView(userId, gmProxy, Main.width, Main.height, Seq.empty, Seq.empty)
+      onEDT:
+        view.open()
+
+      gmProxy ! RegisterView(ctx.self)
+      gmProxy ! RegisterPlayer(userId, Some(ctx.self))
+
+      Behaviors.receiveMessage {
+        case WorldSnapshot(world) =>
+          onEDT:
+            view.updateWorldLocalView(world)
+
+          Behaviors.same
+      }
+
     }

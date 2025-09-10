@@ -24,5 +24,5 @@ class GlobalView(width: Int, height: Int, initialplayers: Seq[Player], initialfo
    */
   
   /** GlobalViewActor talks with GlobalView through updateGlobalWord */
-  def updateWordGlobalView(updatedWorld: World): Unit =
-    world = updatedWorld
+  def updateWordGlobalView(newWorld: World): Unit =
+    world = newWorld

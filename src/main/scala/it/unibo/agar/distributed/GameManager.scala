@@ -6,32 +6,22 @@ import akka.actor.typed.scaladsl.Behaviors
 import akka.cluster.Cluster
 import akka.util.Timeout
 import akka.actor.typed.scaladsl.TimerScheduler
-import it.unibo.agar.Message
 import it.unibo.agar.model.{EatingManager, Food, Player, World}
 import it.unibo.agar.model.*
+import it.unibo.agar.distributed.GameProtocol.*
 
 import scala.concurrent.duration.*
 import scala.collection.mutable
 
 
 object GameManager:
-
-  sealed trait Command extends Message
-  /** è imporatnte suddividere i messaggi tra quelli che ricevi e quelli che invi?
-   * è una buona idea implemntare un GameProtocol contenente tutti i messaggi? */
-  case class RegisterView(view: ActorRef[WorldSnapshot]) extends Command
-  case class RegisterPlayer(userId: String, replyTo: Option[ActorRef[WorldSnapshot]] = None) extends Command
-  case class UserInputMsg(playerId: String, dx: Double, dy: Double) extends Command
-  case object Tick extends Command
-
-  case class WorldSnapshot(world: World) extends  Message
   
   def apply(
              width: Int,
              height: Int,
              initialPlayers: Seq[Player],
              initialFoods: Seq[Food]
-           ): Behavior[Command] =
+           ): Behavior[GameMessage] =
     Behaviors.setup { ctx =>
       Behaviors.withTimers { timers =>
         var world: World = World(width, height, initialPlayers, initialFoods)
@@ -47,12 +37,13 @@ object GameManager:
             ctx.log.info(s"Registered view, total views: ${views.size}")
             Behaviors.same
 
-            /*
+          /*
           case RegisterPlayer(userId, replyTo) =>
             val player
             Behaviors.same
             
-             */
+           */
+
 
 
           case UserInputMsg(pid, dx, dy) =>
@@ -82,6 +73,9 @@ object GameManager:
       }
   }
 
+  /** private variable and methods */
+  private var directions: Map[String, (Double, Double)] = Map.empty
+
   private def updateWorld(w: World): World =
     var world = w
     val orderedPlayers = world.players.sortBy(_.id)
@@ -101,4 +95,4 @@ object GameManager:
     }
     world
 
-  private var directions: Map[String, (Double, Double)] = Map.empty
+

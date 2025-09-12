@@ -12,8 +12,8 @@ class LocalView(userId: String,
                 gmProxy: ActorRef[GameMessage],
                 width: Int,
                 height: Int,
-                mockPlayers: Seq[Player], 
-                mockFoods: Seq[Food]
+                dummyPlayers: Seq[Player],
+                dummyFoods: Seq[Food]
                ) extends MainFrame:
 
   private var worldOpt: Option[World] = None
@@ -44,9 +44,8 @@ class LocalView(userId: String,
       val dx = (mousePos.x - size.width / 2) * 0.01
       val dy = (mousePos.y - size.height / 2) * 0.01
       //manager.movePlayerDirection(playerId, dx, dy)
-      //gmProxy ! UserInputMsg(userId, dx, dy)
+      gmProxy ! UserInputMsg(userId, dx, dy)
       /** devo dire allo user actor che lo user ha inserito gli input */
-      repaint()
     }
 
   def updateWorldLocalView(newWorld: Option[World]): Unit =

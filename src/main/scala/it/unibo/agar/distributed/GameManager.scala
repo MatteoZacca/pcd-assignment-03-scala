@@ -52,7 +52,7 @@ object GameManager:
 
             
           case UserInputMsg(pid, dx, dy) =>
-            val speed = 10.0 /** dovrebbe essere dichiarata a livello più globale */
+            val speed = 1.0 /** dovrebbe essere dichiarata a livello più globale */
             directions = directions.updated(pid, (dx, dy))
             world.playerById(pid) match
               case Some(player) =>
@@ -61,7 +61,7 @@ object GameManager:
                 val moved = player.copy(x = newX, y = newY)
                 world = world.updatePlayer(moved)
 
-              case None =>
+              case None => 
 
             Behaviors.same
 
@@ -75,9 +75,11 @@ object GameManager:
             world = updateWorld(world)
             views.foreach(_ ! WorldSnapshot(world))
             /** Idea: inviare mesasggio di Game ended */
+            /**
             world.players.find(_.mass >= 1000.0).foreach( winner =>
             ctx.log.info(s"Game ended: ${winner.id}")
-            )
+            ) 
+            */
             Behaviors.same
         }
       }

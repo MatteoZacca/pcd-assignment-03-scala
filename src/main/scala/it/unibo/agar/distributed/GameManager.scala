@@ -1,20 +1,25 @@
 package it.unibo.agar.distributed
 
 import akka.cluster.typed.{ClusterSingleton, SingletonActor}
+import akka.actor.typed.receptionist.{ServiceKey, Receptionist}
+import Receptionist.{Register, Subscribe, Listing}
 import akka.actor.typed.{ActorRef, ActorSystem, Behavior}
-import akka.actor.typed.scaladsl.Behaviors
+import akka.actor.typed.scaladsl.{Behaviors, TimerScheduler}
 import akka.cluster.Cluster
 import akka.util.Timeout
-import akka.actor.typed.scaladsl.TimerScheduler
+
 import it.unibo.agar.model.{EatingManager, Food, Player, World}
 import it.unibo.agar.model.*
-import it.unibo.agar.distributed.GameProtocol.*
+import it.unibo.agar.distributed.GameMessage
 
 import scala.concurrent.duration.*
 import scala.collection.mutable
+import scala.util.Random
 
 
 object GameManager:
+
+  val GameManagerKey = ServiceKey[GameMessage]("game-manager")
   
   def apply(
              width: Int,
@@ -24,6 +29,7 @@ object GameManager:
            ): Behavior[GameMessage] =
     Behaviors.setup { ctx =>
       Behaviors.withTimers { timers =>
+        ctx.system.receptionist ! Receptionist.Register(GameManagerKey, ctx.self)
         var world: World = World(width, height, initialPlayers, initialFoods)
         val views: mutable.Set[ActorRef[WorldSnapshot]] = mutable.Set.empty
 
@@ -37,15 +43,14 @@ object GameManager:
             ctx.log.info(s"Registered view, total views: ${views.size}")
             Behaviors.same
 
-          /*
           case RegisterPlayer(userId, replyTo) =>
-            val player
+            val player = Player(userId, Random.nextInt(width), Random.nextInt(height), 120.0)
+              world = world.copy(players = world.players :+ player)
+              ctx.log.info(s"Registered player ===> $player")
+              replyTo ! WorldSnapshot(world)
             Behaviors.same
+
             
-           */
-
-
-
           case UserInputMsg(pid, dx, dy) =>
             val speed = 10.0 /** dovrebbe essere dichiarata a livello più globale */
             directions = directions.updated(pid, (dx, dy))
@@ -60,6 +65,11 @@ object GameManager:
 
             Behaviors.same
 
+          case NewFood(food: Food) =>
+            world = world.copy(foods = world.foods :+ food)
+            views.foreach(_ ! WorldSnapshot(world))
+            Behaviors.same
+            
 
           case Tick =>
             world = updateWorld(world)

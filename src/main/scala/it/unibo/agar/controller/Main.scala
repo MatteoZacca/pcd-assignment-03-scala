@@ -11,6 +11,7 @@ import it.unibo.agar.view.LocalView
 import it.unibo.agar.*
 import it.unibo.agar.distributed.players.*
 import it.unibo.agar.distributed.GlobalViewActor
+import it.unibo.agar.distributed.FoodManager
 
 import java.awt.Window
 import java.util.Timer
@@ -24,11 +25,15 @@ object Main: //extends SimpleSwingApplication:
   val height = 1000
 
   private val numPlayers = 4
-  val players = Seq.empty[Player]
+  private val initialplayers = Seq.empty[Player]
   //private val players = GameInitializer.initialPlayers(numPlayers, width, height)
 
-  val numFoods = 100
-  val foods = GameInitializer.initialFoods(numFoods, width, height)
+  private val numFoods = 100
+  private val initialfoods = GameInitializer.initialFoods(numFoods, width, height)
+  
+  private val rand = scala.util.Random
+  def randomX: Double = rand.nextDouble() * width
+  def randomY: Double = rand.nextDouble() * height
 
   //private val manager = new MockGameStateManager(World(width, height, players, foods))
 
@@ -57,14 +62,17 @@ object Main: //extends SimpleSwingApplication:
     // seeds.head() must return port 25251
     val system = startupWithRole("manager", 25251)(
       Behaviors.setup { ctx =>
-        val globalView = new GlobalView(width, height, players, foods)
+        val globalView = new GlobalView(width, height, initialplayers, initialfoods)
 
-        val gm = GameManager(width, height, players, foods)
-        val gmRef = ClusterSingleton(ctx.system).init(SingletonActor(gm, "GameManager"))
+        val gm = GameManager(width, height, initialplayers, initialfoods)
+        val gmRef = ClusterSingleton(ctx.system).init(SingletonActor(gm, "game-manager-actor-singleton"))
         /** Pensa a una soluzione per la creazione del ClusterSingletonProxy */
         val gvActorRef = ctx.spawn(GlobalViewActor(globalView, gmRef), "global-view-actor")
         println("\n\ngvActorRef: " + gvActorRef + "\n\n")
-
+        
+        val fm = FoodManager()
+        val fmRef = ClusterSingleton(ctx.system).init(SingletonActor(fm, "food-manager-actor-singleton"))
+        
         onEDT:
           globalView.open()
 
@@ -76,10 +84,10 @@ object Main: //extends SimpleSwingApplication:
   @main def mainUser(userId: String): Unit =
     val system = startupWithRole("user", 0)(Behaviors.empty)
     val gmProxy = ClusterSingleton(system).init(
-      SingletonActor(Behaviors.empty, "GameManager")
+      SingletonActor(Behaviors.empty, "game-manager-actor-singleton")
     ) /* Akka riconosce che nel cluster c'è già un singleton registrato con il nome 
     GameManager, quindi otteniamo un ClusterSingletonProxy */
-    val userActorRef = system.systemActorOf(UserActor(userId, gmProxy), userId)
+    val userActorRef = system.systemActorOf(UserActor(userId, gmProxy), "actor-" + userId)
     println("\n\nuserActorRef: " + userActorRef + "\n\n")
 
   // AIPlayerId examples: aiplayer-1, aiplayer-2

@@ -1,6 +1,6 @@
 package it.unibo.agar.view
 
-import it.unibo.agar.model.{MockGameStateManager, Player, World, Food}
+import it.unibo.agar.model.{Player, World, Food}
 import it.unibo.agar.distributed.GameManager
 
 import java.awt.Color
@@ -26,3 +26,4 @@ class GlobalView(width: Int, height: Int, initialplayers: Seq[Player], initialfo
   /** GlobalViewActor talks with GlobalView through updateGlobalWord */
   def updateWordGlobalView(newWorld: World): Unit =
     world = newWorld
+    repaint()

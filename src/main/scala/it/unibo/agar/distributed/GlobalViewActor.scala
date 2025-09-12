@@ -5,7 +5,7 @@ import akka.actor.typed.scaladsl.Behaviors
 import it.unibo.agar.view.GlobalView
 import it.unibo.agar.view.LocalView
 import akka.actor.typed.ActorRef
-import it.unibo.agar.distributed.GameProtocol.*
+import it.unibo.agar.distributed.*
 
 import scala.swing.Swing
 

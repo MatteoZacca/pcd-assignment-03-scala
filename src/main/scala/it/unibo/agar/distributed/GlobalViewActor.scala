@@ -11,7 +11,7 @@ import scala.swing.Swing
 
 object GlobalViewActor:
 
-  def apply(globalView: GlobalView, gmProxy: ActorRef[GameMessage]): Behavior[WorldSnapshot] =
+  def apply(globalView: GlobalView, gmProxy: ActorRef[GameMessage]): Behavior[ViewMessage] =
     Behaviors.setup { ctx =>
       gmProxy ! RegisterView(ctx.self)
 
@@ -21,5 +21,12 @@ object GlobalViewActor:
             globalView.updateWordGlobalView(world)
           }
           Behaviors.same
+
+        case GameOver(winner) =>
+          Swing.onEDT {
+            globalView.endGame(winner)
+          }
+          Behaviors.stopped
+          
     }
 

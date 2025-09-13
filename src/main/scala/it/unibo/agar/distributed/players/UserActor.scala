@@ -11,21 +11,26 @@ import scala.swing.Swing.*
 
 object UserActor:
 
-  def apply(userId: String, gmProxy: ActorRef[GameMessage]): Behavior[WorldSnapshot] =
+  def apply(userId: String, gmProxy: ActorRef[GameMessage]): Behavior[ViewMessage] =
     Behaviors.setup { ctx =>
-      val view = new LocalView(userId, gmProxy, Main.width, Main.height, Seq.empty, Seq.empty)
+      val localView = new LocalView(userId, gmProxy, Main.width, Main.height, Seq.empty, Seq.empty)
       onEDT:
-        view.open()
+        localView.open()
 
       gmProxy ! RegisterView(ctx.self)
       gmProxy ! RegisterPlayer(userId, ctx.self)
 
       Behaviors.receiveMessage {
         case WorldSnapshot(world) =>
-          onEDT:
-            view.updateWorldLocalView(Some(world))
-
+          onEDT {
+            localView.updateWorldLocalView(Some(world))
+          }
           Behaviors.same
-      }
 
+        case GameOver(winner) =>
+          onEDT {
+            localView.endGame(winner)
+          }
+          Behaviors.stopped
+      }
     }

@@ -19,7 +19,7 @@ import scala.util.Random
 
 object GameManager:
 
-  val GameManagerKey = ServiceKey[GameMessage]("game-manager")
+  val GameManagerKey: ServiceKey[GameMessage] = ServiceKey[GameMessage]("game-manager")
   
   def apply(
              width: Int,
@@ -31,7 +31,7 @@ object GameManager:
       Behaviors.withTimers { timers =>
         ctx.system.receptionist ! Receptionist.Register(GameManagerKey, ctx.self)
         var world: World = World(width, height, initialPlayers, initialFoods)
-        val views: mutable.Set[ActorRef[WorldSnapshot]] = mutable.Set.empty
+        val views: mutable.Set[ActorRef[ViewMessage]] = mutable.Set.empty
 
         timers.startTimerAtFixedRate(Tick, 30.millis)
         ctx.log.info(s"GameManager started")
@@ -49,7 +49,6 @@ object GameManager:
               ctx.log.info(s"Registered player ===> $player")
               replyTo ! WorldSnapshot(world)
             Behaviors.same
-
             
           case UserInputMsg(pid, dx, dy) =>
             val speed = 1.0 /** dovrebbe essere dichiarata a livello più globale */
@@ -70,17 +69,17 @@ object GameManager:
             views.foreach(_ ! WorldSnapshot(world))
             Behaviors.same
             
-
           case Tick =>
             world = updateWorld(world)
-            views.foreach(_ ! WorldSnapshot(world))
-            /** Idea: inviare mesasggio di Game ended */
-            /**
-            world.players.find(_.mass >= 1000.0).foreach( winner =>
-            ctx.log.info(s"Game ended: ${winner.id}")
-            ) 
-            */
-            Behaviors.same
+            world.players.find(_.mass > 10000) match {
+              case Some(winner) =>
+                views.foreach(_ ! GameOver(winner.id))
+                Behaviors.stopped
+
+              case None =>
+                views.foreach(_ ! WorldSnapshot(world))
+                Behaviors.same
+            }
         }
       }
   }
@@ -99,6 +98,7 @@ object GameManager:
           .playersExcludingSelf(player)
           .filter(otherPlayer => EatingManager.canEatPlayer(playerEatsFood, otherPlayer))
         val playerEatsPlayers = playersEaten.foldLeft(playerEatsFood)((p, other) => p.grow(other))
+        world.players.foreach(p => println(s"\n\n $p mass: ${p.mass} \n\n"))
         world = world
           .updatePlayer(playerEatsPlayers)
           .removePlayers(playersEaten)

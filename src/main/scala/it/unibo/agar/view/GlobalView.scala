@@ -17,13 +17,11 @@ class GlobalView(width: Int, height: Int, initialplayers: Seq[Player], initialfo
   contents = new Panel:
     override def paintComponent(g: Graphics2D): Unit =
       AgarViewUtils.drawWorld(g, world)
-
-  /*
-  private val timer = new javax.swing.Timer(30, _ => repaint())
-  timer.start()
-   */
   
   /** GlobalViewActor talks with GlobalView through updateGlobalWord */
   def updateWordGlobalView(newWorld: World): Unit =
     world = newWorld
     repaint()
+
+  def endGame(winner: String): Unit =
+    println("")

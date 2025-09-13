@@ -23,10 +23,8 @@ object Main: //extends SimpleSwingApplication:
 
   val width = 1000
   val height = 1000
-
-  private val numPlayers = 4
+  
   private val initialplayers = Seq.empty[Player]
-  //private val players = GameInitializer.initialPlayers(numPlayers, width, height)
 
   private val numFoods = 100
   private val initialfoods = GameInitializer.initialFoods(numFoods, width, height)
@@ -34,9 +32,7 @@ object Main: //extends SimpleSwingApplication:
   private val rand = scala.util.Random
   def randomX: Double = rand.nextDouble() * width
   def randomY: Double = rand.nextDouble() * height
-
-  //private val manager = new MockGameStateManager(World(width, height, players, foods))
-
+  
   /*
   private val timer = new Timer()
   private val task: TimerTask = new TimerTask:
@@ -62,13 +58,11 @@ object Main: //extends SimpleSwingApplication:
     // seeds.head() must return port 25251
     val system = startupWithRole("manager", 25251)(
       Behaviors.setup { ctx =>
-        val globalView = new GlobalView(width, height, initialplayers, initialfoods)
-
         val gm = GameManager(width, height, initialplayers, initialfoods)
         val gmRef = ClusterSingleton(ctx.system).init(SingletonActor(gm, "game-manager-actor-singleton"))
-        /** Pensa a una soluzione per la creazione del ClusterSingletonProxy */
-        val gvActorRef = ctx.spawn(GlobalViewActor(globalView, gmRef), "global-view-actor")
-        println("\n\ngvActorRef: " + gvActorRef + "\n\n")
+
+        val globalView = new GlobalView(width, height, initialplayers, initialfoods)
+        ctx.spawn(GlobalViewActor(globalView, gmRef), "global-view-actor")
         
         val fm = FoodManager()
         val fmRef = ClusterSingleton(ctx.system).init(SingletonActor(fm, "food-manager-actor-singleton"))

@@ -1,8 +1,9 @@
 package it.unibo.agar.distributed
 
-import akka.actor.typed.receptionist.Receptionist
 import akka.actor.typed.{ActorRef, ActorSystem, Behavior}
+import akka.actor.typed.receptionist.Receptionist
 import akka.actor.typed.scaladsl.Behaviors
+
 import it.unibo.agar.distributed.{GameManager, GameMessage}
 import it.unibo.agar.model.Food
 

@@ -1,15 +1,16 @@
 package it.unibo.agar.view
 
-import it.unibo.agar.model.{Player, World, Food}
 import it.unibo.agar.distributed.GameManager
+import it.unibo.agar.model.{Food, Player, World}
 
 import java.awt.Color
 import java.awt.Graphics2D
+
 import scala.swing.*
 
-class GlobalView(width: Int, height: Int, initialplayers: Seq[Player], initialfoods: Seq[Food]) extends MainFrame:
+class GlobalView(width: Int, height: Int, initialPlayers: Seq[Player], initialFood: Seq[Food]) extends MainFrame:
 
-  private var world: World = World(width, height, initialplayers, initialfoods)
+  private var world: World = World(width, height, initialPlayers, initialFood)
   
   title = "Agar.io - Global View"
   preferredSize = new Dimension(800, 800)
@@ -26,5 +27,11 @@ class GlobalView(width: Int, height: Int, initialplayers: Seq[Player], initialfo
       repaint()
 
   def endGame(winner: String): Unit =
-    Swing.onEDT: 
-      println("")
+    Swing.onEDT:
+      Dialog.showMessage(
+        contents.head,
+        message = s"Game Over ! Winner: $winner",
+        title = "Game Over",
+        Dialog.Message.Info
+      )
+      

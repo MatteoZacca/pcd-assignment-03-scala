@@ -1,23 +1,21 @@
 package it.unibo.agar.controller
 
-import akka.cluster.typed.{ClusterSingleton, SingletonActor, Cluster}
-import akka.cluster.singleton.ClusterSingletonProxy
 import akka.actor.typed.{ActorSystem, Behavior}
 import akka.actor.typed.scaladsl.Behaviors
-import it.unibo.agar.distributed.GameManager
-import it.unibo.agar.model.{AIMovement, GameInitializer, MockGameStateManager, Player, World}
-import it.unibo.agar.view.GlobalView
-import it.unibo.agar.view.LocalView
-import it.unibo.agar.*
+import akka.cluster.typed.{ClusterSingleton, SingletonActor, Cluster}
+
+import it.unibo.agar.{seeds, startupWithRole}
 import it.unibo.agar.distributed.players.*
-import it.unibo.agar.distributed.GlobalViewActor
-import it.unibo.agar.distributed.FoodManager
+import it.unibo.agar.distributed.{GameManager, GlobalViewActor, FoodManager}
+import it.unibo.agar.model.{AIMovement, GameInitializer, Player}
+import it.unibo.agar.view.GlobalView
+
+import scala.swing.Swing
 
 import java.awt.Window
 import java.util.Timer
 import java.util.TimerTask
-import scala.swing.*
-import scala.swing.Swing.onEDT
+
 
 object Main: //extends SimpleSwingApplication:
 
@@ -69,7 +67,7 @@ object Main: //extends SimpleSwingApplication:
         val globalView = new GlobalView(width, height, initialPlayers, initialFoods)
         ctx.spawn(GlobalViewActor(globalView, gmRef), "global-view-actor")
         
-        onEDT:
+        Swing.onEDT:
           globalView.open()
 
         Behaviors.empty
@@ -83,8 +81,8 @@ object Main: //extends SimpleSwingApplication:
       SingletonActor(Behaviors.empty, "game-manager-actor-singleton")
     ) /* Akka riconosce che nel cluster c'è già un singleton registrato con il nome 
     GameManager, quindi otteniamo un ClusterSingletonProxy */
-    val userActorRef = system.systemActorOf(UserActor(userId, gmProxy), "actor-" + userId)
-    println("\n\nuserActorRef: " + userActorRef + "\n\n")
+    system.systemActorOf(UserActor(userId, gmProxy), "actor-" + userId)
+    
 
   // AIPlayerId examples: aiplayer-1, aiplayer-2
   // port: 0

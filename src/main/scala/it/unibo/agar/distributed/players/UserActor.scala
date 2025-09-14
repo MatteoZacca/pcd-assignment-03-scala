@@ -2,9 +2,9 @@ package it.unibo.agar.distributed.players
 
 import akka.actor.typed.{ActorRef, ActorSystem, Behavior}
 import akka.actor.typed.scaladsl.Behaviors
-import it.unibo.agar.distributed.*
-import it.unibo.agar.distributed.GameManager
+
 import it.unibo.agar.controller.Main
+import it.unibo.agar.distributed.*
 import it.unibo.agar.view.LocalView
 
 import scala.swing.Swing.*

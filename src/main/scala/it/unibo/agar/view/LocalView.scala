@@ -1,9 +1,9 @@
 package it.unibo.agar.view
 
 import akka.actor.typed.{ActorRef, ActorSystem, Behavior}
+
 import it.unibo.agar.model.{Food, Player, World}
 import it.unibo.agar.distributed.*
-import it.unibo.agar.controller.Main
 
 import java.awt.Graphics2D
 import scala.swing.*
@@ -61,14 +61,14 @@ class LocalView(userId: String,
       message = "You have been eaten !",
       title = "Eaten",
       Dialog.Message.Info
-    )
+      )
 
   def showGameOver(winner: String): Unit =
-    Dialog.showMessage(
+    Swing.onEDT: 
+      Dialog.showMessage(
       contents.head,
       message = s"Game Over ! Winner: $winner",
       title = "Game Over",
       Dialog.Message.Info
-    )
-    close()
+      )
 

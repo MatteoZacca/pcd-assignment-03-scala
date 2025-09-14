@@ -1,19 +1,15 @@
 package it.unibo.agar.distributed
 
-import akka.cluster.typed.{ClusterSingleton, SingletonActor}
 import akka.actor.typed.receptionist.{ServiceKey, Receptionist}
 import Receptionist.{Register, Subscribe, Listing}
 import akka.actor.typed.{ActorRef, ActorSystem, Behavior}
 import akka.actor.typed.scaladsl.{Behaviors, TimerScheduler}
-import akka.cluster.Cluster
-import akka.util.Timeout
 
 import it.unibo.agar.model.{EatingManager, Food, Player, World}
-import it.unibo.agar.model.*
 import it.unibo.agar.distributed.GameMessage
 
-import scala.concurrent.duration.*
 import scala.collection.mutable
+import scala.concurrent.duration.*
 import scala.util.Random
 
 

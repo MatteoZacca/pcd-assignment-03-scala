@@ -4,7 +4,7 @@ import akka.actor.typed.ActorSystem
 import akka.actor.typed.Behavior
 import com.typesafe.config.ConfigFactory
 
-val seeds = List(2551, 2552) // seed used in the configuration
+val seeds = List(25251, 25252) // seed used in the configuration
 
 def startup[X](name: String, port: Int)(root: => Behavior[X]): ActorSystem[X] =
   // Override the configuration of the port

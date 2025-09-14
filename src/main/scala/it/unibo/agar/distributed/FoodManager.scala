@@ -9,7 +9,7 @@ import it.unibo.agar.model.Food
 import scala.concurrent.duration.*
 
 object FoodManager:
-  private val tickFood = 0.05.seconds
+  private val tickFood = 0.5.seconds
 
   def apply(): Behavior[FoodMessage] = Behaviors.setup { ctx =>
     Behaviors.withTimers { timers =>
@@ -18,7 +18,7 @@ object FoodManager:
       }
       ctx.system.receptionist ! Receptionist.Subscribe(GameManager.GameManagerKey, listingAdapter)
       timers.startTimerAtFixedRate(GenerateFood, tickFood)
-      
+
       /** size gameManagers sarà mai maggiore di 1? */
       def active(gameManagers: Set[ActorRef[GameMessage]]): Behavior[FoodMessage] =
         Behaviors.receiveMessage {
@@ -29,7 +29,7 @@ object FoodManager:
             gameManagers.foreach(_ ! NewFood(Food(newFoodId)))
             Behaviors.same
         }
-      
+
       active(Set.empty)
     }
   }

@@ -7,7 +7,7 @@ import it.unibo.agar.view.LocalView
 import akka.actor.typed.ActorRef
 import it.unibo.agar.distributed.*
 
-import scala.swing.Swing
+import scala.swing.Swing.*
 
 object GlobalViewActor:
 
@@ -16,17 +16,13 @@ object GlobalViewActor:
       gmProxy ! RegisterView(ctx.self)
 
       Behaviors.receiveMessage:
-        case WorldSnapshot(world) =>
-          Swing.onEDT {
-            globalView.updateWordGlobalView(world)
-          }
+        case WorldSnapshot(world) => 
+          globalView.updateWordGlobalView(world)
           Behaviors.same
 
         case GameOver(winner) =>
-          Swing.onEDT {
-            globalView.endGame(winner)
-          }
+          globalView.endGame(winner)
           Behaviors.stopped
-          
+
     }
 

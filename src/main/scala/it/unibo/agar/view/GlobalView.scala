@@ -20,8 +20,11 @@ class GlobalView(width: Int, height: Int, initialplayers: Seq[Player], initialfo
   
   /** GlobalViewActor talks with GlobalView through updateGlobalWord */
   def updateWordGlobalView(newWorld: World): Unit =
-    world = newWorld
-    repaint()
+    /** this is the same as calling SwingUtilities.invokeLater */
+    Swing.onEDT: 
+      world = newWorld
+      repaint()
 
   def endGame(winner: String): Unit =
-    println("")
+    Swing.onEDT: 
+      println("")

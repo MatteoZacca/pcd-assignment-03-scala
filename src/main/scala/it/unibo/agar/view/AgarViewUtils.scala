@@ -17,7 +17,7 @@ object AgarViewUtils:
 
   private def playerColor(id: String): Color = id match
     case pid if pid.startsWith("u") =>
-      val idx = pid.drop(1).toIntOption.getOrElse(0)
+      val idx = pid.drop(5).toIntOption.getOrElse(0)
       playerPalette(idx % playerPalette.length)
     case _ => Color.gray
 

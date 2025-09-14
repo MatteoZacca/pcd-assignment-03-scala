@@ -13,6 +13,7 @@ object UserActor:
 
   def apply(userId: String, gmProxy: ActorRef[GameMessage]): Behavior[ViewMessage] =
     Behaviors.setup { ctx =>
+      var playing: Boolean = false
       val localView = new LocalView(userId, gmProxy, Main.width, Main.height, Seq.empty, Seq.empty)
       onEDT:
         localView.open()
@@ -22,15 +23,20 @@ object UserActor:
 
       Behaviors.receiveMessage {
         case WorldSnapshot(world) =>
-          onEDT {
+          if (playing && !world.players.exists(_.id == userId)) {
+            localView.showPlayerEaten()
+            Behaviors.stopped
+          } else {
             localView.updateWorldLocalView(Some(world))
+            Behaviors.same
           }
-          Behaviors.same
 
+        case RegisteredPlayer(playFlag) =>
+          playing = playFlag
+          Behaviors.same
+          
         case GameOver(winner) =>
-          onEDT {
-            localView.endGame(winner)
-          }
+          localView.showGameOver(winner)
           Behaviors.stopped
       }
     }

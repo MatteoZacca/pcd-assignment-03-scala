@@ -21,13 +21,15 @@ import scala.swing.Swing.onEDT
 
 object Main: //extends SimpleSwingApplication:
 
-  val width = 1000
-  val height = 1000
+  val width = 800
+  val height = 800
   
-  private val initialplayers = Seq.empty[Player]
+  private val initialPlayers = Seq.empty[Player]
+  private val speed = 1.0
+  private val initialMass = 120.0
 
   private val numFoods = 100
-  private val initialfoods = GameInitializer.initialFoods(numFoods, width, height)
+  private val initialFoods = GameInitializer.initialFoods(numFoods, width, height)
   
   private val rand = scala.util.Random
   def randomX: Double = rand.nextDouble() * width
@@ -56,16 +58,16 @@ object Main: //extends SimpleSwingApplication:
 
   @main def mainManager(): Unit =
     // seeds.head() must return port 25251
-    val system = startupWithRole("manager", 25251)(
+    val system = startupWithRole("manager", seeds.head)(
       Behaviors.setup { ctx =>
-        val gm = GameManager(width, height, initialplayers, initialfoods)
-        val gmRef = ClusterSingleton(ctx.system).init(SingletonActor(gm, "game-manager-actor-singleton"))
-
-        val globalView = new GlobalView(width, height, initialplayers, initialfoods)
-        ctx.spawn(GlobalViewActor(globalView, gmRef), "global-view-actor")
-        
         val fm = FoodManager()
         val fmRef = ClusterSingleton(ctx.system).init(SingletonActor(fm, "food-manager-actor-singleton"))
+        
+        val gm = GameManager(width, height, initialPlayers, initialFoods, speed, initialMass)
+        val gmRef = ClusterSingleton(ctx.system).init(SingletonActor(gm, "game-manager-actor-singleton"))
+
+        val globalView = new GlobalView(width, height, initialPlayers, initialFoods)
+        ctx.spawn(GlobalViewActor(globalView, gmRef), "global-view-actor")
         
         onEDT:
           globalView.open()

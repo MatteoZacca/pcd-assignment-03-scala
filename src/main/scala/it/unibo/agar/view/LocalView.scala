@@ -50,14 +50,25 @@ class LocalView(userId: String,
     }
 
   def updateWorldLocalView(newWorld: Option[World]): Unit =
-    worldOpt = newWorld
-    repaint()
+    Swing.onEDT: 
+      worldOpt = newWorld
+      repaint()
 
-  def endGame(winner: String): Unit =
+  def showPlayerEaten(): Unit =
+    Swing.onEDT: 
+      Dialog.showMessage(
+      contents.head,
+      message = "You have been eaten !",
+      title = "Eaten",
+      Dialog.Message.Info
+    )
+
+  def showGameOver(winner: String): Unit =
     Dialog.showMessage(
       contents.head,
-      message = s"Game Over! Winner: $winner",
+      message = s"Game Over ! Winner: $winner",
       title = "Game Over",
       Dialog.Message.Info
     )
     close()
+

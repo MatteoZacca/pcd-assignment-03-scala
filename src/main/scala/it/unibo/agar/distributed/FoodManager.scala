@@ -10,7 +10,7 @@ import it.unibo.agar.model.Food
 import scala.concurrent.duration.*
 
 object FoodManager:
-  private val tickFood = 0.5.seconds
+  private val tickFood = 1.seconds
 
   def apply(): Behavior[FoodMessage] = Behaviors.setup { ctx =>
     Behaviors.withTimers { timers =>

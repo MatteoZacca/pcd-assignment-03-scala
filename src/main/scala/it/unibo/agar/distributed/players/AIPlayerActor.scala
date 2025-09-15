@@ -12,7 +12,7 @@ import it.unibo.agar.model.{AIMovement, World}
 import scala.concurrent.duration.*
 
 object AIPlayerActor:
-  private val tickAi = 30.millis
+  private val tickAi = 50.millis
 
   def apply(aiId: String): Behavior[Any] = Behaviors.setup { ctx =>
     Behaviors.withTimers { timers =>

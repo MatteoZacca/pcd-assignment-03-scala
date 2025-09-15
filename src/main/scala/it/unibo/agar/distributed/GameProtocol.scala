@@ -34,7 +34,7 @@ enum StandardViewMessage extends GlobalViewActorMsg, UserActorMsg:
 
 enum LocalViewActorMsg extends UserActorMsg:
   case RegisteredPlayer(playing: Boolean)
-  
+
  */
   
   

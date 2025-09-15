@@ -17,7 +17,7 @@ import java.util.Timer
 import java.util.TimerTask
 
 
-object Main: //extends SimpleSwingApplication:
+object Main:
 
   val width = 800
   val height = 800
@@ -34,29 +34,9 @@ object Main: //extends SimpleSwingApplication:
   def randomX: Double = rand.nextDouble() * width
   def randomY: Double = rand.nextDouble() * height
 
-  /*
-  private val timer = new Timer()
-  private val task: TimerTask = new TimerTask:
-    override def run(): Unit =
-      AIMovement.moveAI("p1", manager)
-      manager.tick()
-      onEDT(Window.getWindows.foreach(_.repaint()))
-  timer.scheduleAtFixedRate(task, 0, 30) // every 30ms
-  */
-
-  /*
-  override def top: Frame =
-    // Open both views at startup
-    new GlobalView(manager).open()
-    new LocalView(manager, "p1").open()
-    new LocalView(manager, "p2").open()
-    // No launcher window, just return an empty frame (or null if allowed)
-    new Frame { visible = false }
-  */
-
-
+  /** runMain it.unibo.agar.controller.mainManager */
   @main def mainManager(): Unit =
-    // seeds.head() must return port 25251
+    // seeds.head() returns port 25251
     val system = startupWithRole("manager", seeds.head)(
       Behaviors.setup { ctx =>
         val fm = FoodManager()
@@ -75,6 +55,7 @@ object Main: //extends SimpleSwingApplication:
       }
     )
 
+  /** runMain it.unibo.agar.controller.mainUser user-n */
   // userId examples: user-1, user-2,...
   @main def mainUser(userId: String): Unit =
     val system = startupWithRole("user", 0)(Behaviors.empty)
@@ -84,15 +65,9 @@ object Main: //extends SimpleSwingApplication:
     GameManager, quindi otteniamo un ClusterSingletonProxy */
     system.systemActorOf(UserActor(userId, gmProxy), "actor-" + userId)
 
-
+  /** runMain it.unibo.agar.controller.mainAIPlayer */
   @main def mainAIPlayer(): Unit =
     val system = startupWithRole("aiplayer", seeds.last)(Behaviors.empty)
-    /*
-    val gmProxy = ClusterSingleton(system).init(
-      SingletonActor(Behaviors.empty, "game-manager-actor-singleton")
-    )
-    
-     */
     (1 to AIPlayers).foreach( n => 
       system.systemActorOf(AIPlayerActor(s"ai-$n"), s"ai-player-$n")
     )

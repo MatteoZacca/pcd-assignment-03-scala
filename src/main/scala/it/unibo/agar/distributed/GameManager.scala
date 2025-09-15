@@ -116,7 +116,7 @@ object GameManager:
           .filter(otherPlayer => EatingManager.canEatPlayer(playerEatFood, otherPlayer))
         val playerEatPlayers = playersEatable.foldLeft(playerEatFood)((p, other) => p.grow(other))
 
-        world.players.foreach(p => println(s"\n\n $p mass: ${p.mass} \n\n"))
+        //world.players.foreach(p => println(s"\n\n $p mass: ${p.mass} \n\n"))
 
         world = world
           .updatePlayer(playerEatPlayers)

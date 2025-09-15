@@ -2,6 +2,8 @@ package it.unibo.agar.model
 
 import it.unibo.agar.controller.Main.{randomX, randomY}
 
+type Direction = (Double, Double)
+
 sealed trait Entity:
 
   def id: String

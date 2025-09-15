@@ -5,7 +5,7 @@ import Receptionist.{Register, Subscribe, Listing}
 import akka.actor.typed.{ActorRef, ActorSystem, Behavior}
 import akka.actor.typed.scaladsl.{Behaviors, TimerScheduler}
 
-import it.unibo.agar.model.{EatingManager, Food, Player, World}
+import it.unibo.agar.model.{Direction, EatingManager, Food, Player, World}
 import it.unibo.agar.distributed.GameMessage
 
 import scala.collection.mutable
@@ -59,6 +59,8 @@ object GameManager:
                 val newY = (player.y + dy * speed).max(0).min(height)
                 val moved = player.copy(x = newX, y = newY)
                 world = world.updatePlayer(moved)
+                
+                /** Snapshot */
 
               case None =>
 
@@ -69,6 +71,21 @@ object GameManager:
             views.foreach(_ ! WorldSnapshot(world))
             Behaviors.same
 
+          case AIPlayerMove(aiId, direction) =>
+            directions = directions.updated(aiId, direction)
+            world.playerById(aiId) match
+              case Some(aiPlayer) =>
+                // direction._1 = dx and ._2 = dy
+                val newX = (aiPlayer.x + direction._1 * speed).max(0).min(width)
+                val newY = (aiPlayer.y + direction._2 * speed).max(0).min(height)
+                val moved = aiPlayer.copy(x = newX, y = newY)
+                world = world.updatePlayer(moved)
+                /** Snapshot? */
+              case None =>
+            
+            Behaviors.same
+            
+            
           case Tick =>
             world = updateWorld(world)
             world.players.find(_.mass > 10000) match {

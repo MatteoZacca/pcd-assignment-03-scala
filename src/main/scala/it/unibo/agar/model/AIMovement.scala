@@ -1,7 +1,10 @@
 package it.unibo.agar.model
 
+import it.unibo.agar.model.Direction
+
 /** Object responsible for AI movement logic, separate from the game state management */
 object AIMovement:
+  
 
   /** Finds the nearest food for a given player in the world
     * @param player
@@ -17,20 +20,23 @@ object AIMovement:
 
   /** Moves the AI toward the nearest food
     *
-    * @param gameManager
-    *   The game state manager that provides world state and movement capabilities
+    * 
+    *   
     */
-  def moveAI(name: String, gameManager: GameStateManager): Unit =
-    val world = gameManager.getWorld
-    val aiOpt = world.playerById(name)
-    val foodOpt = nearestFood(name, world)
+  def getAIMove(aiId: String, world: World): Option[Direction] =
+    val aiOpt = world.playerById(aiId)
+    val foodOpt = nearestFood(aiId, world)
     (aiOpt, foodOpt) match
       case (Some(ai), Some(food)) =>
         val dx = food.x - ai.x
         val dy = food.y - ai.y
         val distance = math.hypot(dx, dy)
-        if (distance > 0)
+        if (distance > 0) {
           val normalizedDx = dx / distance
           val normalizedDy = dy / distance
-          gameManager.movePlayerDirection(name, normalizedDx, normalizedDy)
-      case _ => // Do nothing if AI or food doesn't exist
+          Some((normalizedDx, normalizedDy))
+        } else {
+          None
+        }
+          
+      case _ => None // Do nothing if AI or food doesn't exist

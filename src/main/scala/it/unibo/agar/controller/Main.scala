@@ -21,18 +21,19 @@ object Main: //extends SimpleSwingApplication:
 
   val width = 800
   val height = 800
-  
+
   private val initialPlayers = Seq.empty[Player]
-  private val speed = 1.0
+  private val AIPlayers = 2
   private val initialMass = 120.0
+  private val speed = 1.0
 
   private val numFoods = 100
   private val initialFoods = GameInitializer.initialFoods(numFoods, width, height)
-  
+
   private val rand = scala.util.Random
   def randomX: Double = rand.nextDouble() * width
   def randomY: Double = rand.nextDouble() * height
-  
+
   /*
   private val timer = new Timer()
   private val task: TimerTask = new TimerTask:
@@ -60,13 +61,13 @@ object Main: //extends SimpleSwingApplication:
       Behaviors.setup { ctx =>
         val fm = FoodManager()
         val fmRef = ClusterSingleton(ctx.system).init(SingletonActor(fm, "food-manager-actor-singleton"))
-        
+
         val gm = GameManager(width, height, initialPlayers, initialFoods, speed, initialMass)
         val gmRef = ClusterSingleton(ctx.system).init(SingletonActor(gm, "game-manager-actor-singleton"))
 
         val globalView = new GlobalView(width, height, initialPlayers, initialFoods)
         ctx.spawn(GlobalViewActor(globalView, gmRef), "global-view-actor")
-        
+
         Swing.onEDT:
           globalView.open()
 
@@ -82,19 +83,20 @@ object Main: //extends SimpleSwingApplication:
     ) /* Akka riconosce che nel cluster c'è già un singleton registrato con il nome 
     GameManager, quindi otteniamo un ClusterSingletonProxy */
     system.systemActorOf(UserActor(userId, gmProxy), "actor-" + userId)
-    
 
-  // AIPlayerId examples: aiplayer-1, aiplayer-2
-  // port: 0
-  /*
-  @main def mainAIPlayer(aiId: String, port: Int): Unit =
-    val system = startupWithRole("aiplayer", 0)(Behaviors.empty)
+
+  @main def mainAIPlayer(): Unit =
+    val system = startupWithRole("aiplayer", seeds.last)(Behaviors.empty)
+    /*
     val gmProxy = ClusterSingleton(system).init(
-      SingletonActor(Behaviors.empty, "GameManager")
+      SingletonActor(Behaviors.empty, "game-manager-actor-singleton")
     )
-    system.systemActorOf(AIPlayer(aiId, gmProxy), s"$aiId")
+    
+     */
+    (1 to AIPlayers).foreach( n => 
+      system.systemActorOf(AIPlayerActor(s"ai-$n"), s"ai-player-$n")
+    )
 
-   */
 
 
 

@@ -34,7 +34,7 @@ object UserActor:
         case RegisteredPlayer(playFlag) =>
           playing = playFlag
           Behaviors.same
-          
+
         case GameOver(winner) =>
           localView.showGameOver(winner)
           Behaviors.stopped

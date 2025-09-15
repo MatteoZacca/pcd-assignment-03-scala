@@ -14,6 +14,8 @@ object FoodManager:
 
   def apply(): Behavior[FoodMessage] = Behaviors.setup { ctx =>
     Behaviors.withTimers { timers =>
+      /** è una buona bets practice mettere listing adapter già dopo timers? 
+       * o è meglio metterlo prima?  */
       val listingAdapter = ctx.messageAdapter[Receptionist.Listing] {
         case GameManager.GameManagerKey.Listing(listings) => WrappedListingGameManager(listings)
       }
@@ -25,6 +27,7 @@ object FoodManager:
         Behaviors.receiveMessage {
           case WrappedListingGameManager(listings) =>
             active(gameManagers ++ listings)
+            // Behaviors.same here wouldn't update Food
 
           case GenerateFood =>
             gameManagers.foreach(_ ! NewFood(Food(newFoodId)))

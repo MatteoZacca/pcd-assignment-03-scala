@@ -45,7 +45,7 @@ class LocalView(userId: String,
       val dx = (mousePos.x - size.width / 2) * 0.01
       val dy = (mousePos.y - size.height / 2) * 0.01
       //manager.movePlayerDirection(playerId, dx, dy)
-      gmProxy ! UserInputMsg(userId, dx, dy)
+      gmProxy ! UserMove(userId, dx, dy)
       /** devo dire allo user actor che lo user ha inserito gli input */
     }
 

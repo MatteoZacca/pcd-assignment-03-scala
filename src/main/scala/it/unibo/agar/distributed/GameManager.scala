@@ -7,6 +7,9 @@ import akka.actor.typed.scaladsl.{Behaviors, TimerScheduler}
 
 import it.unibo.agar.model.{Direction, EatingManager, Food, Player, World}
 import it.unibo.agar.distributed.GameMessage
+import it.unibo.agar.distributed.StandardViewMessage
+import it.unibo.agar.distributed.LocalViewMsg
+
 
 import scala.collection.mutable
 import scala.concurrent.duration.*
@@ -29,10 +32,9 @@ object GameManager:
       Behaviors.withTimers { timers =>
         ctx.system.receptionist ! Receptionist.Register(GameManagerKey, ctx.self)
         var world: World = World(width, height, initialPlayers, initialFoods)
-        val views: mutable.Set[ActorRef[ViewMessage]] = mutable.Set.empty
+        val views: mutable.Set[ActorRef[StandardViewMessage]] = mutable.Set.empty
 
         timers.startTimerAtFixedRate(Tick, 30.millis)
-        ctx.log.info(s"GameManager started")
 
         Behaviors.receiveMessage {
           case RegisterView(view) =>
@@ -40,6 +42,8 @@ object GameManager:
             ctx.log.info(s"Registered view, total views: ${views.size}")
             Behaviors.same
 
+          /* --------------------------------------------------------------------- */
+            
           case RegisterPlayer(userId, replyTo) =>
             val player = Player(userId, Random.nextInt(width), Random.nextInt(height), initialMass)
               world = world.copy(players = world.players :+ player)
@@ -51,7 +55,16 @@ object GameManager:
            registrato e non anche alle altre views? */
             Behaviors.same
 
-          case UserInputMsg(pid, dx, dy) =>
+          /* --------------------------------------------------------------------- */
+
+          case NewFood(food: Food) =>
+            world = world.copy(foods = world.foods :+ food)
+            views.foreach(_ ! WorldSnapshot(world))
+            Behaviors.same
+            
+          /* --------------------------------------------------------------------- */
+            
+          case UserMove(pid, dx, dy) =>
             directions = directions.updated(pid, (dx, dy))
             world.playerById(pid) match
               case Some(player) =>
@@ -66,11 +79,8 @@ object GameManager:
 
             Behaviors.same
 
-          case NewFood(food: Food) =>
-            world = world.copy(foods = world.foods :+ food)
-            views.foreach(_ ! WorldSnapshot(world))
-            Behaviors.same
-
+          /* --------------------------------------------------------------------- */
+          
           case AIPlayerMove(aiId, direction) =>
             directions = directions.updated(aiId, direction)
             world.playerById(aiId) match
@@ -84,7 +94,8 @@ object GameManager:
               case None =>
             
             Behaviors.same
-            
+
+          /* --------------------------------------------------------------------- */
             
           case Tick =>
             world = updateWorld(world)

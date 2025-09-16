@@ -5,13 +5,16 @@ import akka.actor.typed.scaladsl.Behaviors
 
 import it.unibo.agar.controller.Main
 import it.unibo.agar.distributed.*
+import it.unibo.agar.distributed.UserMsg
+import it.unibo.agar.distributed.StandardViewMessage
+import it.unibo.agar.distributed.LocalViewMsg
 import it.unibo.agar.view.LocalView
 
 import scala.swing.Swing.*
 
 object UserActor:
 
-  def apply(userId: String, gmProxy: ActorRef[GameMessage]): Behavior[ViewMessage] =
+  def apply(userId: String, gmProxy: ActorRef[GameMessage]): Behavior[UserMsg] =
     Behaviors.setup { ctx =>
       var playing: Boolean = false
       val localView = new LocalView(userId, gmProxy, Main.width, Main.height, Seq.empty, Seq.empty)
@@ -31,11 +34,16 @@ object UserActor:
             Behaviors.same
           }
 
+        /* --------------------------------------------------------------------- */
+
         case RegisteredPlayer(playFlag) =>
           playing = playFlag
           Behaviors.same
 
+        /* --------------------------------------------------------------------- */
+
         case GameOver(winner) =>
+          ctx.log.info(s"\n\n ${ctx.self.path} received GameOver msg, Winner: $winner\n\n")
           localView.showGameOver(winner)
           Behaviors.stopped
       }

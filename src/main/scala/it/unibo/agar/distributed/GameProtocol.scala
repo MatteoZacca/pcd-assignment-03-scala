@@ -5,37 +5,37 @@ import akka.actor.typed.ActorRef
 import it.unibo.agar.Message
 import it.unibo.agar.model.{Direction, Food, World}
   
+/** GameManager messages */
 sealed trait GameMessage extends Message
-case class RegisterView(view: ActorRef[ViewMessage]) extends GameMessage
-case class RegisterPlayer(userId: String, replyTo: ActorRef[ViewMessage]) extends GameMessage
-case class UserInputMsg(playerId: String, dx: Double, dy: Double) extends GameMessage
+case class RegisterView(view: ActorRef[StandardViewMessage]) extends GameMessage
+case class RegisterPlayer(userId: String, replyTo: ActorRef[LocalViewMsg]) extends GameMessage
 case class NewFood(food: Food) extends GameMessage
-case object Tick extends GameMessage
-case class AIPlayerMove(aiId: String, direction: Direction)extends GameMessage
+case class UserMove(playerId: String, dx: Double, dy: Double) extends GameMessage
+case class AIPlayerMove(aiId: String, direction: Direction) extends GameMessage
+case object Tick extends GameMessage with AIPlayerMsg 
+
 
 sealed trait FoodMessage extends Message
-case class WrappedListingGameManager(refs: Set[ActorRef[GameMessage]]) extends FoodMessage
 case object GenerateFood extends FoodMessage
 
+final case class WrappedListingGameManager(refs: Set[ActorRef[GameMessage]]) 
+  extends FoodMessage 
+    with AIPlayerMsg
+
+/** GlobalViewActor, UserActor and AIPlayerActor messages */
 sealed trait ViewMessage extends Message
-case class WorldSnapshot(world: World)extends ViewMessage
-case class GameOver(winner: String) extends ViewMessage
-case class RegisteredPlayer(playing: Boolean) extends ViewMessage
+trait GlobalViewMsg extends ViewMessage
+trait UserMsg extends ViewMessage
+trait AIPlayerMsg extends ViewMessage
 
-/*
-/** GlobalViewActor and UserActor messages */
-sealed trait ViewMessage extends Message
-trait GlobalViewActorMsg extends ViewMessage
-trait UserActorMsg extends ViewMessage
+sealed trait StandardViewMessage extends GlobalViewMsg with UserMsg with AIPlayerMsg
+final case class WorldSnapshot(world: World) extends StandardViewMessage
+final case class GameOver(winner: String) extends StandardViewMessage
 
-enum StandardViewMessage extends GlobalViewActorMsg, UserActorMsg:
-  case WorldSnapshot(world: World)
-  case GameOver(winner: String)
+sealed trait LocalViewMsg extends UserMsg with AIPlayerMsg
+final case class RegisteredPlayer(playing: Boolean) extends LocalViewMsg
 
-enum LocalViewActorMsg extends UserActorMsg:
-  case RegisteredPlayer(playing: Boolean)
 
- */
   
   
   

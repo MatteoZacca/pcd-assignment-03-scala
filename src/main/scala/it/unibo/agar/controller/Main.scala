@@ -67,8 +67,8 @@ object Main:
 
   /** runMain it.unibo.agar.controller.mainAIPlayer */
   @main def mainAIPlayer(): Unit =
-    val system = startupWithRole("aiplayer", seeds.last)(Behaviors.empty)
-    (1 to AIPlayers).foreach( n => 
+    (1 to AIPlayers).foreach(n =>
+      val system = startupWithRole("aiplayer", 0)(Behaviors.empty)
       system.systemActorOf(AIPlayerActor(s"ai-$n"), s"ai-player-$n")
     )
 

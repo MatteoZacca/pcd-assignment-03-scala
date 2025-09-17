@@ -3,6 +3,7 @@ package it.unibo.agar.distributed.players
 import akka.actor.typed.{ActorRef, ActorSystem, Behavior}
 import akka.actor.typed.receptionist.Receptionist
 import akka.actor.typed.scaladsl.Behaviors
+import akka.cluster.typed.Cluster
 
 import it.unibo.agar.controller.Main
 import it.unibo.agar.distributed.*
@@ -40,11 +41,15 @@ object AIPlayerActor:
           /* --------------------------------------------------------------------- */
 
           case WorldSnapshot(newWorld) =>
-            if (playing && newWorld.players.exists(_.id == aiId)) {
+            if (playing && !newWorld.players.exists(_.id == aiId)) {
+              ctx.log.info(s"\n\n $aiId has been eaten \n\n")
+              gameManagers.foreach(_ ! PlayerLeft(aiId, Cluster(ctx.system).selfMember.address))
+              ctx.system.terminate()
               Behaviors.stopped
+            } else {
+              world = Some(newWorld)
+              Behaviors.same
             }
-            world = Some(newWorld)
-            Behaviors.same  
             
           /* --------------------------------------------------------------------- */  
             
@@ -55,7 +60,7 @@ object AIPlayerActor:
           /* --------------------------------------------------------------------- */
 
           case GameOver(winner) =>
-            ctx.log.info(s"\n\n ${ctx.self.path} received GameOver msg, Winner: $winner\n\n")
+            ctx.log.info(s"\n\n[${ctx.self.path}] received GameOver msg, Winner: $winner\n\n")
             Behaviors.stopped
           
           /* --------------------------------------------------------------------- */

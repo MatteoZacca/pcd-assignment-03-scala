@@ -1,7 +1,7 @@
 package it.unibo.agar.distributed
 
+import akka.actor.Address
 import akka.actor.typed.ActorRef
-
 import it.unibo.agar.Message
 import it.unibo.agar.model.{Direction, Food, World}
   
@@ -12,6 +12,7 @@ case class RegisterPlayer(userId: String, replyTo: ActorRef[LocalViewMsg]) exten
 case class NewFood(food: Food) extends GameMessage
 case class UserMove(playerId: String, dx: Double, dy: Double) extends GameMessage
 case class AIPlayerMove(aiId: String, direction: Direction) extends GameMessage
+case class PlayerLeft(id: String, nodeAddress: Address) extends GameMessage
 case object Tick extends GameMessage with AIPlayerMsg 
 
 

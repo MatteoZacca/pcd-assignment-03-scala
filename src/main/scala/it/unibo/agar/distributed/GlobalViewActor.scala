@@ -18,7 +18,7 @@ object GlobalViewActor:
           Behaviors.same
 
         case GameOver(winner) =>
-          ctx.log.info(s"\n\n ${ctx.self.path} received GameOver msg, Winner: $winner\n\n")
+          ctx.log.info(s"\n\n[${ctx.self.path}] received GameOver msg, Winner: $winner\n\n")
           globalView.endGame(winner)
           Behaviors.stopped
 

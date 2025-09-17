@@ -1,5 +1,6 @@
 package it.unibo.agar.distributed
 
+import akka.cluster.typed.{Cluster, Leave}
 import akka.actor.typed.receptionist.{ServiceKey, Receptionist}
 import Receptionist.{Register, Subscribe, Listing}
 import akka.actor.typed.{ActorRef, ActorSystem, Behavior}
@@ -39,11 +40,11 @@ object GameManager:
         Behaviors.receiveMessage {
           case RegisterView(view) =>
             views += view
-            ctx.log.info(s"Registered view, total views: ${views.size}")
+            ctx.log.info(s"\n\nRegistered view: $view, total views: ${views.size}\n")
             Behaviors.same
 
           /* --------------------------------------------------------------------- */
-            
+
           case RegisterPlayer(userId, replyTo) =>
             val player = Player(userId, Random.nextInt(width), Random.nextInt(height), initialMass)
               world = world.copy(players = world.players :+ player)
@@ -61,9 +62,9 @@ object GameManager:
             world = world.copy(foods = world.foods :+ food)
             views.foreach(_ ! WorldSnapshot(world))
             Behaviors.same
-            
+
           /* --------------------------------------------------------------------- */
-            
+
           case UserMove(pid, dx, dy) =>
             directions = directions.updated(pid, (dx, dy))
             world.playerById(pid) match
@@ -73,30 +74,61 @@ object GameManager:
                 val moved = player.copy(x = newX, y = newY)
                 world = world.updatePlayer(moved)
                 
-                /** Snapshot */
+                /** Snapshot? */
+                world = updateWorld(world)
+                world.players.find(_.mass > 10000) match {
+                  case Some(winner) =>
+                    views.foreach(_ ! GameOver(winner.id))
+                    Behaviors.stopped // any messages still in the mailbox become dead letters
+                  // and the actor cannot receive new messages anymore
+
+                  case None =>
+                    views.foreach(_ ! WorldSnapshot(world))
+                    Behaviors.same
+                }
 
               case None =>
 
             Behaviors.same
 
           /* --------------------------------------------------------------------- */
-          
+
           case AIPlayerMove(aiId, direction) =>
             directions = directions.updated(aiId, direction)
             world.playerById(aiId) match
               case Some(aiPlayer) =>
-                // direction._1 = dx and ._2 = dy
+                // direction._1 = dx and direction._2 = dy
                 val newX = (aiPlayer.x + direction._1 * speed).max(0).min(width)
                 val newY = (aiPlayer.y + direction._2 * speed).max(0).min(height)
                 val moved = aiPlayer.copy(x = newX, y = newY)
                 world = world.updatePlayer(moved)
                 /** Snapshot? */
+                world = updateWorld(world)
+                world.players.find(_.mass > 10000) match {
+                  case Some(winner) =>
+                    views.foreach(_ ! GameOver(winner.id))
+                    Behaviors.stopped // any messages still in the mailbox become dead letters
+                  // and the actor cannot receive new messages anymore
+
+                  case None =>
+                    views.foreach(_ ! WorldSnapshot(world))
+                    Behaviors.same
+                }
+
               case None =>
+                      
             
             Behaviors.same
 
           /* --------------------------------------------------------------------- */
+
+          case PlayerLeft(idPlayer, nodeAddress) =>
+            ctx.log.info(s"\n\nMembers before $idPlayer left: ${Cluster(ctx.system).state.members}\n\n")
+            Cluster(ctx.system).manager ! Leave(nodeAddress)
+            Behaviors.same
             
+          /* --------------------------------------------------------------------- */
+
           case Tick =>
             world = updateWorld(world)
             world.players.find(_.mass > 10000) match {

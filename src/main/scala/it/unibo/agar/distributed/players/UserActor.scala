@@ -2,6 +2,7 @@ package it.unibo.agar.distributed.players
 
 import akka.actor.typed.{ActorRef, ActorSystem, Behavior}
 import akka.actor.typed.scaladsl.Behaviors
+import akka.cluster.typed.Cluster
 
 import it.unibo.agar.controller.Main
 import it.unibo.agar.distributed.*
@@ -28,6 +29,9 @@ object UserActor:
         case WorldSnapshot(world) =>
           if (playing && !world.players.exists(_.id == userId)) {
             localView.showPlayerEaten()
+            ctx.log.info(s"\n\n $userId has been eaten \n\n")
+            gmProxy ! PlayerLeft(userId, Cluster(ctx.system).selfMember.address)
+            //ctx.system.terminate()
             Behaviors.stopped
           } else {
             localView.updateWorldLocalView(Some(world))

@@ -62,11 +62,7 @@ object GameManager:
             world = world.copy(foods = world.foods :+ food)
             views.foreach(_ ! WorldSnapshot(world))
             Behaviors.same
-
-          /* --------------------------------------------------------------------- */
-
-          
-
+            
           /* --------------------------------------------------------------------- */
 
           case PlayerMove(aiId, (dx, dy)) =>
@@ -77,23 +73,12 @@ object GameManager:
                 val newY = (aiPlayer.y + dy * speed).max(0).min(height)
                 val moved = aiPlayer.copy(x = newX, y = newY)
                 world = world.updatePlayer(moved)
-                /** Snapshot? */
+                /** Updating world and Snapshot */
                 world = updateWorld(world)
-                world.players.find(_.mass > 10000) match {
-                  case Some(winner) =>
-                    views.foreach(_ ! GameOver(winner.id))
-                    Behaviors.stopped // any messages still in the mailbox become dead letters
-                  // and the actor cannot receive new messages anymore
-
-                  case None =>
-                    views.foreach(_ ! WorldSnapshot(world))
-                    Behaviors.same
-                }
-
-              case None =>
-                      
-            
-            Behaviors.same
+                weHaveChampion(world, views)
+                
+              case None => 
+                Behaviors.same
 
           /* --------------------------------------------------------------------- */
 
@@ -106,16 +91,7 @@ object GameManager:
 
           case Tick =>
             world = updateWorld(world)
-            world.players.find(_.mass > 10000) match {
-              case Some(winner) =>
-                views.foreach(_ ! GameOver(winner.id))
-                Behaviors.stopped // any messages still in the mailbox become dead letters
-                // and the actor cannot receive new messages anymore
-
-              case None =>
-                views.foreach(_ ! WorldSnapshot(world))
-                Behaviors.same
-            }
+            weHaveChampion(world, views)
         }
       }
   }
@@ -135,7 +111,6 @@ object GameManager:
         val playerEatPlayers = playersEatable.foldLeft(playerEatFood)((p, other) => p.grow(other))
 
         //world.players.foreach(p => println(s"\n\n $p mass: ${p.mass} \n\n"))
-
         world = world
           .updatePlayer(playerEatPlayers)
           .removePlayers(playersEatable)
@@ -144,4 +119,17 @@ object GameManager:
     }
     world
 
+  private def weHaveChampion(world: World, views: mutable.Set[ActorRef[StandardViewMessage]]): Behavior[GameMessage] =
+    world.players.find(_.mass > 10000) match {
+      case Some(winner) =>
+        views.foreach(_ ! GameOver(winner.id))
+        Behaviors.stopped // any messages still in the mailbox become dead letters
+      // and the actor cannot receive new messages anymore
+
+      case None =>
+        views.foreach(_ ! WorldSnapshot(world))
+        Behaviors.same
+    }  
+      
+  
 

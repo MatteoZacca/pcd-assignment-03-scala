@@ -10,8 +10,7 @@ sealed trait GameMessage extends Message
 case class RegisterView(view: ActorRef[StandardViewMessage]) extends GameMessage
 case class RegisterPlayer(userId: String, replyTo: ActorRef[LocalViewMsg]) extends GameMessage
 case class NewFood(food: Food) extends GameMessage
-case class UserMove(playerId: String, dx: Double, dy: Double) extends GameMessage
-case class AIPlayerMove(aiId: String, direction: Direction) extends GameMessage
+case class PlayerMove(aiId: String, direction: Direction) extends GameMessage
 case class PlayerLeft(id: String, nodeAddress: Address) extends GameMessage
 case object Tick extends GameMessage with AIPlayerMsg 
 

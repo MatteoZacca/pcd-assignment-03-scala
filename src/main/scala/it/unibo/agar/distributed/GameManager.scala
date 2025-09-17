@@ -65,41 +65,16 @@ object GameManager:
 
           /* --------------------------------------------------------------------- */
 
-          case UserMove(pid, dx, dy) =>
-            directions = directions.updated(pid, (dx, dy))
-            world.playerById(pid) match
-              case Some(player) =>
-                val newX = (player.x + dx * speed).max(0).min(width)
-                val newY = (player.y + dy * speed).max(0).min(height)
-                val moved = player.copy(x = newX, y = newY)
-                world = world.updatePlayer(moved)
-                
-                /** Snapshot? */
-                world = updateWorld(world)
-                world.players.find(_.mass > 10000) match {
-                  case Some(winner) =>
-                    views.foreach(_ ! GameOver(winner.id))
-                    Behaviors.stopped // any messages still in the mailbox become dead letters
-                  // and the actor cannot receive new messages anymore
-
-                  case None =>
-                    views.foreach(_ ! WorldSnapshot(world))
-                    Behaviors.same
-                }
-
-              case None =>
-
-            Behaviors.same
+          
 
           /* --------------------------------------------------------------------- */
 
-          case AIPlayerMove(aiId, direction) =>
-            directions = directions.updated(aiId, direction)
+          case PlayerMove(aiId, (dx, dy)) =>
+            directions = directions.updated(aiId, (dx, dy))
             world.playerById(aiId) match
               case Some(aiPlayer) =>
-                // direction._1 = dx and direction._2 = dy
-                val newX = (aiPlayer.x + direction._1 * speed).max(0).min(width)
-                val newY = (aiPlayer.y + direction._2 * speed).max(0).min(height)
+                val newX = (aiPlayer.x + dx * speed).max(0).min(width)
+                val newY = (aiPlayer.y + dy * speed).max(0).min(height)
                 val moved = aiPlayer.copy(x = newX, y = newY)
                 world = world.updatePlayer(moved)
                 /** Snapshot? */

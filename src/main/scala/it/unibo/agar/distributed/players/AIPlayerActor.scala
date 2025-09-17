@@ -69,7 +69,7 @@ object AIPlayerActor:
             gameManagers.flatMap { gm =>
               world.flatMap { w =>
                 AIMovement.getAIMove(aiId, w).map { direction =>
-                  gm ! AIPlayerMove(aiId, direction)
+                  gm ! PlayerMove(aiId, direction)
                 }
               }
             }

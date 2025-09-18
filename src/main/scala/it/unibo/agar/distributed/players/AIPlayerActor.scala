@@ -42,9 +42,9 @@ object AIPlayerActor:
 
           case WorldSnapshot(newWorld) =>
             if (playing && !newWorld.players.exists(_.id == aiId)) {
-              ctx.log.info(s"\n\n[${ctx.self.path.name}] log: $aiId has been eaten \n\n")
+              ctx.log.info(s"\n\n[${ctx.self.path.name}] log: $aiId has been eaten\n")
               playing = false
-              gameManagers.foreach(_ ! PlayerLeft(aiId, Cluster(ctx.system).selfMember.address))
+              gameManagers.foreach(_ ! EatenPlayerLeft(aiId, Cluster(ctx.system).selfMember.address))
               Behaviors.stopped
             } else {
               world = Some(newWorld)
@@ -61,7 +61,7 @@ object AIPlayerActor:
 
           case GameOver(winner) =>
             ctx.log.info(s"\n\n[${ctx.self.path}] received GameOver msg, Winner: $winner\n\n")
-            gameManagers.foreach(_ ! PlayerLeft(aiId, Cluster(ctx.system).selfMember.address))
+            gameManagers.foreach(_ ! GameOverPlayerLeft(aiId, Cluster(ctx.system).selfMember.address))
             Behaviors.stopped
           
           /* --------------------------------------------------------------------- */

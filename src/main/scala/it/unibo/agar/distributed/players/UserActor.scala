@@ -31,7 +31,7 @@ object UserActor:
             localView.showPlayerEaten()
             ctx.log.info(s"\n\n [${ctx.self.path.name}] log: $userId has been eaten \n\n")
             playing = false
-            gmProxy ! PlayerLeft(userId, Cluster(ctx.system).selfMember.address)
+            gmProxy ! EatenPlayerLeft(userId, Cluster(ctx.system).selfMember.address)
             Behaviors.stopped
           } else {
             localView.updateWorldLocalView(Some(world))
@@ -49,7 +49,7 @@ object UserActor:
         case GameOver(winner) =>
           ctx.log.info(s"\n\n ${ctx.self.path} received GameOver msg, Winner: $winner\n\n")
           localView.showGameOver(winner)
-          gmProxy ! PlayerLeft(userId, Cluster(ctx.system).selfMember.address)
+          gmProxy ! GameOverPlayerLeft(userId, Cluster(ctx.system).selfMember.address)
           Behaviors.stopped
       }
     }

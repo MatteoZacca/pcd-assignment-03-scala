@@ -52,8 +52,7 @@ object GameManager:
               // If actor A sends two messages to actor B, in order m1 then m2, 
               // then B will always process m1 before m2
               replyTo ! RegisteredPlayer(true) 
-              views.foreach(_ ! WorldSnapshot(world)) /** è giusto mandarlo solo allo userActor appena 
-           registrato e non anche alle altre views? */
+              views.foreach(_ ! WorldSnapshot(world))
             Behaviors.same
 
           /* --------------------------------------------------------------------- */
@@ -62,7 +61,7 @@ object GameManager:
             world = world.copy(foods = world.foods :+ food)
             views.foreach(_ ! WorldSnapshot(world))
             Behaviors.same
-            
+
           /* --------------------------------------------------------------------- */
 
           case PlayerMove(id, (dx, dy)) =>
@@ -75,26 +74,29 @@ object GameManager:
                 world = world.updatePlayer(moved)
                 /** Updating world and Snapshot */
                 world = updateWorld(world)
-                weHaveChampion(world, views)
-                
-              case None => 
+                weHaveChampion(world, views, endGameThreshold)
+
+              case None =>
                 Behaviors.same
 
           /* --------------------------------------------------------------------- */
 
-          case PlayerLeft(idPlayer, nodeAddress) =>
+          case EatenPlayerLeft(idPlayer, nodeAddress) =>
             ctx.log.info(s"\n\n${ctx.self.path.name} received PlayerLeft msg, " +
-              s"members before $idPlayer left: ${Cluster(ctx.system).state.members}\n\n")
+              s"$idPlayer is preparing to leave the cluster")
             Cluster(ctx.system).manager ! Leave(nodeAddress)
-            /** in questo momento non può ricevere PlayerLeft perchè quando manda GameOver msg esegue Behaviors.stopped.
-             * Idea: mutare Behaviors.stopped in Behaviors.same e fare un check dei members presenti qua dentro */
             Behaviors.same
-            
+
           /* --------------------------------------------------------------------- */
 
           case Tick =>
             world = updateWorld(world)
-            weHaveChampion(world, views)
+            weHaveChampion(world, views, endGameThreshold)
+
+          /* --------------------------------------------------------------------- */
+
+          case _ =>
+            Behaviors.same
         }
       }
   }
@@ -122,17 +124,39 @@ object GameManager:
     }
     world
 
-  private def weHaveChampion(world: World, views: mutable.Set[ActorRef[StandardViewMessage]]): Behavior[GameMessage] =
+  private def weHaveChampion(world: World, views: mutable.Set[ActorRef[StandardViewMessage]], endGameThreshold: Int): Behavior[GameMessage] =
     world.players.find(_.mass > endGameThreshold) match {
       case Some(winner) =>
         views.foreach(_ ! GameOver(winner.id))
-        Behaviors.stopped // any messages still in the mailbox become dead letters
+        val received: Int = 0
+        gameOverStatus(world.players.size, received) // any messages still in the mailbox become dead letters
       // and the actor cannot receive new messages anymore
 
       case None =>
         views.foreach(_ ! WorldSnapshot(world))
         Behaviors.same
-    }  
-      
-  
+    }
+
+  /** When GameManager find a winner, it changes behavior */
+  private def gameOverStatus(expected: Int, received: Int): Behavior[GameMessage] =
+    Behaviors.setup { ctx =>
+
+      Behaviors.receiveMessage {
+        case GameOverPlayerLeft(id, nodeAddress) =>
+          val updated = received + 1
+          ctx.log.info(s"\n\nGameManager received GameOverPlayerLeft: $updated/$expected}\n, " +
+            s"$id is preparing to leave the cluster")
+          Cluster(ctx.system).manager ! Leave(nodeAddress)
+          if (updated == expected) {
+            Behaviors.stopped
+          } else {
+            gameOverStatus(expected, updated)
+          }
+
+        case _ => // Ignore any other message
+          Behaviors.same
+      }
+    }
+
+
 

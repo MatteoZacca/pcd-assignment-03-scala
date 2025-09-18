@@ -33,6 +33,7 @@ object GameManager:
         ctx.system.receptionist ! Receptionist.Register(GameManagerKey, ctx.self)
         var world: World = World(width, height, initialPlayers, initialFoods)
         val views: mutable.Set[ActorRef[StandardViewMessage]] = mutable.Set.empty
+        val endGameThreshold: Int = 10_000
 
         timers.startTimerAtFixedRate(Tick, 30.millis)
 
@@ -122,7 +123,7 @@ object GameManager:
     world
 
   private def weHaveChampion(world: World, views: mutable.Set[ActorRef[StandardViewMessage]]): Behavior[GameMessage] =
-    world.players.find(_.mass > 10000) match {
+    world.players.find(_.mass > endGameThreshold) match {
       case Some(winner) =>
         views.foreach(_ ! GameOver(winner.id))
         Behaviors.stopped // any messages still in the mailbox become dead letters

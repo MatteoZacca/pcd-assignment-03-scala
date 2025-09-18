@@ -45,7 +45,6 @@ object AIPlayerActor:
               ctx.log.info(s"\n\n[${ctx.self.path.name}] log: $aiId has been eaten \n\n")
               playing = false
               gameManagers.foreach(_ ! PlayerLeft(aiId, Cluster(ctx.system).selfMember.address))
-              //ctx.system.terminate()
               Behaviors.stopped
             } else {
               world = Some(newWorld)

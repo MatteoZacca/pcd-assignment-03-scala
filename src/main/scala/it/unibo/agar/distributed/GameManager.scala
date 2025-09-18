@@ -11,7 +11,6 @@ import it.unibo.agar.distributed.GameMessage
 import it.unibo.agar.distributed.StandardViewMessage
 import it.unibo.agar.distributed.LocalViewMsg
 
-
 import scala.collection.mutable
 import scala.concurrent.duration.*
 import scala.util.Random
@@ -65,13 +64,13 @@ object GameManager:
             
           /* --------------------------------------------------------------------- */
 
-          case PlayerMove(aiId, (dx, dy)) =>
-            directions = directions.updated(aiId, (dx, dy))
-            world.playerById(aiId) match
-              case Some(aiPlayer) =>
-                val newX = (aiPlayer.x + dx * speed).max(0).min(width)
-                val newY = (aiPlayer.y + dy * speed).max(0).min(height)
-                val moved = aiPlayer.copy(x = newX, y = newY)
+          case PlayerMove(id, (dx, dy)) =>
+            directions = directions.updated(id, (dx, dy))
+            world.playerById(id) match
+              case Some(player) =>
+                val newX = (player.x + dx * speed).max(0).min(width)
+                val newY = (player.y + dy * speed).max(0).min(height)
+                val moved = player.copy(x = newX, y = newY)
                 world = world.updatePlayer(moved)
                 /** Updating world and Snapshot */
                 world = updateWorld(world)
@@ -83,8 +82,11 @@ object GameManager:
           /* --------------------------------------------------------------------- */
 
           case PlayerLeft(idPlayer, nodeAddress) =>
-            ctx.log.info(s"\n\nMembers before $idPlayer left: ${Cluster(ctx.system).state.members}\n\n")
+            ctx.log.info(s"\n\n${ctx.self.path.name} received PlayerLeft msg, " +
+              s"members before $idPlayer left: ${Cluster(ctx.system).state.members}\n\n")
             Cluster(ctx.system).manager ! Leave(nodeAddress)
+            /** in questo momento non può ricevere PlayerLeft perchè quando manda GameOver msg esegue Behaviors.stopped.
+             * Idea: mutare Behaviors.stopped in Behaviors.same e fare un check dei members presenti qua dentro */
             Behaviors.same
             
           /* --------------------------------------------------------------------- */
@@ -110,7 +112,7 @@ object GameManager:
           .filter(otherPlayer => EatingManager.canEatPlayer(playerEatFood, otherPlayer))
         val playerEatPlayers = playersEatable.foldLeft(playerEatFood)((p, other) => p.grow(other))
 
-        //world.players.foreach(p => println(s"\n\n $p mass: ${p.mass} \n\n"))
+        //world.players.foreach(p => println(s"\n$p mass: ${p.mass} \n"))
         world = world
           .updatePlayer(playerEatPlayers)
           .removePlayers(playersEatable)

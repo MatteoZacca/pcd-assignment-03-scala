@@ -29,7 +29,8 @@ object UserActor:
         case WorldSnapshot(world) =>
           if (playing && !world.players.exists(_.id == userId)) {
             localView.showPlayerEaten()
-            ctx.log.info(s"\n\n $userId has been eaten \n\n")
+            ctx.log.info(s"\n\n [${ctx.self.path.name}] log: $userId has been eaten \n\n")
+            playing = false
             gmProxy ! PlayerLeft(userId, Cluster(ctx.system).selfMember.address)
             //ctx.system.terminate()
             Behaviors.stopped
@@ -49,6 +50,7 @@ object UserActor:
         case GameOver(winner) =>
           ctx.log.info(s"\n\n ${ctx.self.path} received GameOver msg, Winner: $winner\n\n")
           localView.showGameOver(winner)
+          gmProxy ! PlayerLeft(userId, Cluster(ctx.system).selfMember.address)
           Behaviors.stopped
       }
     }

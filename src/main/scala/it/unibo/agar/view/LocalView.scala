@@ -40,13 +40,10 @@ class LocalView(userId: String,
 
     reactions += { case e: event.MouseMoved =>
       val mousePos = e.point
-      //val playerOpt = manager.getWorld.players.find(_.id == playerId)
-      //playerOpt.foreach: player =>
       val dx = (mousePos.x - size.width / 2) * 0.01
       val dy = (mousePos.y - size.height / 2) * 0.01
-      //manager.movePlayerDirection(playerId, dx, dy)
+      /** Comunico al GameManager che l'utente ha inserito input */
       gmProxy ! PlayerMove(userId, (dx, dy))
-      /** devo dire allo user actor che lo user ha inserito gli input */
     }
 
   def updateWorldLocalView(newWorld: Option[World]): Unit =

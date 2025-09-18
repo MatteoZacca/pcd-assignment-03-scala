@@ -15,18 +15,18 @@ import it.unibo.agar.model.{AIMovement, World}
 import scala.concurrent.duration.*
 
 object AIPlayerActor:
-  private val tickAi = 50.millis
+  private val tickAI = 60.millis
 
   def apply(aiId: String): Behavior[AIPlayerMsg] = Behaviors.setup { ctx =>
     Behaviors.withTimers { timers =>
-      var playing:Boolean = false
+      var playing: Boolean = false
       var world: Option[World] = None
 
       val listingAdapter = ctx.messageAdapter[Receptionist.Listing] {
         case GameManager.GameManagerKey.Listing(listings) => WrappedListingGameManager(listings)
       }
       ctx.system.receptionist ! Receptionist.Subscribe(GameManager.GameManagerKey, listingAdapter)
-      timers.startTimerAtFixedRate(Tick, tickAi)
+      timers.startTimerAtFixedRate(Tick, tickAI)
 
       def active(gameManagers: Set[ActorRef[GameMessage]]): Behavior[AIPlayerMsg] =
         Behaviors.receiveMessage {
@@ -42,9 +42,10 @@ object AIPlayerActor:
 
           case WorldSnapshot(newWorld) =>
             if (playing && !newWorld.players.exists(_.id == aiId)) {
-              ctx.log.info(s"\n\n $aiId has been eaten \n\n")
+              ctx.log.info(s"\n\n[${ctx.self.path.name}] log: $aiId has been eaten \n\n")
+              playing = false
               gameManagers.foreach(_ ! PlayerLeft(aiId, Cluster(ctx.system).selfMember.address))
-              ctx.system.terminate()
+              //ctx.system.terminate()
               Behaviors.stopped
             } else {
               world = Some(newWorld)
@@ -61,20 +62,20 @@ object AIPlayerActor:
 
           case GameOver(winner) =>
             ctx.log.info(s"\n\n[${ctx.self.path}] received GameOver msg, Winner: $winner\n\n")
+            gameManagers.foreach(_ ! PlayerLeft(aiId, Cluster(ctx.system).selfMember.address))
             Behaviors.stopped
           
           /* --------------------------------------------------------------------- */
             
           case Tick =>
-            gameManagers.flatMap { gm =>
-              world.flatMap { w =>
-                AIMovement.getAIMove(aiId, w).map { direction =>
-                  gm ! PlayerMove(aiId, direction)
-                }
-              }
+            for {
+              gm <- gameManagers
+              w  <- world
+              direction <- AIMovement.getAIMove(aiId, w)
+            } do {
+              gm ! PlayerMove(aiId, direction)
             }
             Behaviors.same
-            
         }
 
       active(Set.empty)

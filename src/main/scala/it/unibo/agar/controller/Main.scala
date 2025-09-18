@@ -40,10 +40,10 @@ object Main:
     val system = startupWithRole("manager", seeds.head)(
       Behaviors.setup { ctx =>
         val fm = FoodManager()
-        val fmRef = ClusterSingleton(ctx.system).init(SingletonActor(fm, "food-manager-actor-singleton"))
+        val fmRef = ClusterSingleton(ctx.system).init(SingletonActor(fm, "FoodManager"))
 
         val gm = GameManager(width, height, initialPlayers, initialFoods, speed, initialMass)
-        val gmRef = ClusterSingleton(ctx.system).init(SingletonActor(gm, "game-manager-actor-singleton"))
+        val gmRef = ClusterSingleton(ctx.system).init(SingletonActor(gm, "GameManager"))
 
         val globalView = new GlobalView(width, height, initialPlayers, initialFoods)
         ctx.spawn(GlobalViewActor(globalView, gmRef), "global-view-actor")
@@ -60,15 +60,17 @@ object Main:
   @main def mainUser(userId: String): Unit =
     val system = startupWithRole("user", 0)(Behaviors.empty)
     val gmProxy = ClusterSingleton(system).init(
-      SingletonActor(Behaviors.empty, "game-manager-actor-singleton")
+      SingletonActor(Behaviors.empty, "GameManager")
     ) /* Akka riconosce che nel cluster c'è già un singleton registrato con il nome 
     GameManager, quindi otteniamo un ClusterSingletonProxy */
     system.systemActorOf(UserActor(userId, gmProxy), "actor-" + userId)
 
   /** runMain it.unibo.agar.controller.mainAIPlayer */
   @main def mainAIPlayer(): Unit =
-    (1 to AIPlayers).foreach(n =>
-      val system = startupWithRole("aiplayer", 0)(Behaviors.empty)
+    val ports = (25252, 25253)
+    (1 to AIPlayers).map( n =>
+      val port = if (n == 1) ports._1 else ports._2
+      val system = startupWithRole("aiplayer", port)(Behaviors.empty)
       system.systemActorOf(AIPlayerActor(s"ai-$n"), s"ai-player-$n")
     )
 

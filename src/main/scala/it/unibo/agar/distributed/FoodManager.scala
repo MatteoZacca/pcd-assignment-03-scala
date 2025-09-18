@@ -21,8 +21,7 @@ object FoodManager:
       }
       ctx.system.receptionist ! Receptionist.Subscribe(GameManager.GameManagerKey, listingAdapter)
       timers.startTimerAtFixedRate(GenerateFood, tickFood)
-
-      /** size gameManagers sarà mai maggiore di 1? */
+      
       def active(gameManagers: Set[ActorRef[GameMessage]]): Behavior[FoodMessage] =
         Behaviors.receiveMessage {
           case WrappedListingGameManager(listings) =>

@@ -1,4 +1,7 @@
-package it.unibo.agar.model
+package it.unibo.agar.deprecated
+
+import it.unibo.agar.model.{EatingManager, Player, World}
+import it.unibo.agar.deprecated.GameStateManager
 
 trait GameStateManager:
 

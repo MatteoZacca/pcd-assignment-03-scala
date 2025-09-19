@@ -1,8 +1,9 @@
-package it.unibo.agar
+package it.unibo.agar.deprecated
 
-import akka.actor.typed.ActorRef
-import akka.actor.typed.Behavior
+import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.Behaviors
+import it.unibo.agar.Message
+import it.unibo.agar.startup
 
 object PingPong:
 

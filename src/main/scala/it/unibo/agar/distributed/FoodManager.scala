@@ -38,3 +38,4 @@ object FoodManager:
   }
 
   private def newFoodId: String = "f" + java.util.UUID.randomUUID().toString
+  

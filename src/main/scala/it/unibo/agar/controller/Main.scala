@@ -63,14 +63,14 @@ object Main:
         Swing.onEDT:
           globalView.open()
 
-        Behaviors.empty
+        Behaviors.ignore
       }
     )
 
   /** runMain it.unibo.agar.controller.mainUser user-n */
   // userId examples: user-1, user-2,...
   @main def mainUser(userId: String): Unit =
-    val system = startupWithRole("user", 0)(Behaviors.empty)
+    val system = startupWithRole("user", 0)(Behaviors.ignore)
     val gmProxy = ClusterSingleton(system).init(
       SingletonActor(Behaviors.empty, "GameManager")
     ) /* Akka riconosce che nel cluster c'è già un singleton registrato con il nome 
@@ -82,7 +82,7 @@ object Main:
     val ports = (25252, 25253)
     (1 to AIPlayers).map( n =>
       val port = if (n == 1) ports._1 else ports._2
-      val system = startupWithRole("aiplayer", port)(Behaviors.empty)
+      val system = startupWithRole("aiplayer", port)(Behaviors.ignore)
       system.systemActorOf(AIPlayerActor(s"ai-$n"), s"ai-player-$n")
     )
 

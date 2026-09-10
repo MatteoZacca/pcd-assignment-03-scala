@@ -6,6 +6,7 @@ lazy val akkaVersion = "2.10.5"
 lazy val root = (project in file("."))
   .settings(
     name := "agar-io",
+    fork := true,
     libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-actor-typed" % akkaVersion, // For standard log configuration
       "com.typesafe.akka" %% "akka-remote" % akkaVersion, // For akka remote

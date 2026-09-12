@@ -39,11 +39,6 @@ object Main:
     // seeds.head() returns port 25251
     val system = startupWithRole("manager", seeds.head)(
       Behaviors.setup { ctx =>
-        val fm = FoodManager()
-        val supervisedFoodManager = Behaviors
-          .supervise(fm)
-          .onFailure[Exception](SupervisorStrategy.restart)
-        ClusterSingleton(ctx.system).init(SingletonActor(supervisedFoodManager, "FoodManager"))
 
         val gm = GameManager(width, height, initialPlayers, initialFoods, speed, initialMass)
         val supervisedGameManager = Behaviors
@@ -55,8 +50,14 @@ object Main:
               randomFactor = 0.2
             )
           )
-        val gmRef = ClusterSingleton(ctx.system).init(SingletonActor(gm, "GameManager"))
+        val gmRef = ClusterSingleton(ctx.system).init(SingletonActor(supervisedGameManager, "GameManager"))
 
+        val fm = FoodManager(gmRef)
+        val supervisedFoodManager = Behaviors
+          .supervise(fm)
+          .onFailure[Exception](SupervisorStrategy.restart)
+        ClusterSingleton(ctx.system).init(SingletonActor(supervisedFoodManager, "FoodManager"))
+        
         val globalView = new GlobalView(width, height, initialPlayers, initialFoods)
         ctx.spawn(GlobalViewActor(globalView, gmRef), "global-view-actor")
 
@@ -83,7 +84,12 @@ object Main:
     (1 to AIPlayers).map( n =>
       val port = if (n == 1) ports._1 else ports._2
       val system = startupWithRole("aiplayer", port)(Behaviors.ignore)
-      system.systemActorOf(AIPlayerActor(s"ai-$n"), s"ai-player-$n")
+
+      val gmProxy = ClusterSingleton(system).init(
+        SingletonActor(Behaviors.empty, "GameManager")
+      )
+
+      system.systemActorOf(AIPlayerActor(s"ai-$n", gmProxy), s"ai-player-$n")
     )
 
 

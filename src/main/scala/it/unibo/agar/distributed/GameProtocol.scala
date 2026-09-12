@@ -18,10 +18,6 @@ case object Tick extends GameMessage with AIPlayerMsg
 sealed trait FoodMessage extends Message
 case object GenerateFood extends FoodMessage
 
-final case class WrappedListingGameManager(refs: Set[ActorRef[GameMessage]]) 
-  extends FoodMessage 
-    with AIPlayerMsg
-
 /** GlobalViewActor, UserActor and AIPlayerActor messages */
 sealed trait ViewMessage extends Message
 trait GlobalViewMsg extends ViewMessage

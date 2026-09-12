@@ -1,8 +1,6 @@
 package it.unibo.agar.distributed
 
 import akka.cluster.typed.{Cluster, Leave}
-import akka.actor.typed.receptionist.{ServiceKey, Receptionist}
-import Receptionist.{Register, Subscribe, Listing}
 import akka.actor.typed.{ActorRef, ActorSystem, Behavior}
 import akka.actor.typed.scaladsl.{Behaviors, TimerScheduler}
 
@@ -18,8 +16,6 @@ import scala.util.Random
 
 object GameManager:
 
-  val GameManagerKey: ServiceKey[GameMessage] = ServiceKey[GameMessage]("game-manager")
-
   def apply(
              width: Int,
              height: Int,
@@ -30,7 +26,6 @@ object GameManager:
            ): Behavior[GameMessage] =
     Behaviors.setup { ctx =>
       Behaviors.withTimers { timers =>
-        ctx.system.receptionist ! Receptionist.Register(GameManagerKey, ctx.self)
 
         val initialWorld: World = World(width, height, initialPlayers, initialFoods)
         val endGameThreshold: Int = 10_000

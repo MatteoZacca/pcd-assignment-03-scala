@@ -28,7 +28,6 @@ object AIPlayerActor:
           case WorldSnapshot(newWorld) =>
             if (playing && !newWorld.players.exists(_.id == aiId)) {
               ctx.log.info(s"\n\n[${ctx.self.path.name}] log: $aiId has been eaten\n")
-              gmProxy ! EatenPlayerLeft(aiId, Cluster(ctx.system).selfMember.address)
               Behaviors.stopped
             } else {
               active(playing, Some(newWorld))

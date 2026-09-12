@@ -1,15 +1,11 @@
 package it.unibo.agar.distributed
 
 import akka.cluster.typed.{Cluster, Leave}
-import akka.actor.typed.{ActorRef, ActorSystem, Behavior}
-import akka.actor.typed.scaladsl.{Behaviors, TimerScheduler}
+import akka.actor.typed.{ActorRef, Behavior}
+import akka.actor.typed.scaladsl.Behaviors
 
 import it.unibo.agar.model.{Direction, EatingManager, Food, Player, World}
-import it.unibo.agar.distributed.GameMessage
-import it.unibo.agar.distributed.StandardViewMessage
-import it.unibo.agar.distributed.LocalViewMsg
 
-import scala.collection.mutable
 import scala.concurrent.duration.*
 import scala.util.Random
 
@@ -55,11 +51,17 @@ object GameManager:
                   ): Behavior[GameMessage] = Behaviors.receiveMessage {
           
           case RegisterView(view) =>
+            ctx.watchWith(view, ViewLeft(view))
             val newViews = views + view
             ctx.log.info(s"\n\nRegistered view: $view, total views: ${newViews.size}\n")
             active(world, newViews, directions)
 
           case RegisterPlayer(userId, replyTo) =>
+            ctx.unwatch(replyTo)
+
+            val viewRef = replyTo.asInstanceOf[ActorRef[StandardViewMessage]]
+            ctx.watchWith(viewRef, PlayerLeft(userId, viewRef))
+
             val player = Player(userId, Random.nextInt(width), Random.nextInt(height), initialMass)
             val newWorld = world.copy(players = world.players :+ player)
             ctx.log.info(s"Registered player ===> ${player.id}")
@@ -85,11 +87,14 @@ object GameManager:
 
             checkChampionAndNextState(newWorld, views, newDirections)
 
-          case EatenPlayerLeft(idPlayer, nodeAddress) =>
-            ctx.log.info(s"\n\n${ctx.self.path.name} received PlayerLeft msg, " +
-              s"$idPlayer is preparing to leave the cluster")
-            Cluster(ctx.system).manager ! Leave(nodeAddress)
-            active(world, views, directions)
+          case PlayerLeft(userId, view) =>
+            ctx.log.info(s"\n\nPlayer $userId has left/disconnected. Removing from world.\n")
+            val newWorld = world.copy(players = world.players.filterNot(_.id == userId))
+            active(newWorld, views - view, directions - userId)
+
+          case ViewLeft(view) =>
+            ctx.log.info(s"\n\nView disconnected: $view\n")
+            active(world, views - view, directions)
 
           case Tick =>
             val newWorld = updateWorldCollisions(world)

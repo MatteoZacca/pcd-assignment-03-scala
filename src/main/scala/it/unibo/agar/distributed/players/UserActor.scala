@@ -31,7 +31,6 @@ object UserActor:
             localView.showPlayerEaten()
             ctx.log.info(s"\n\n [${ctx.self.path.name}] log: $userId has been eaten \n\n")
             playing = false
-            gmProxy ! EatenPlayerLeft(userId, Cluster(ctx.system).selfMember.address)
             Behaviors.stopped
           } else {
             localView.updateWorldLocalView(Some(world))

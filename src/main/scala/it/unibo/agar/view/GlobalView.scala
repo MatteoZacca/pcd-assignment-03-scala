@@ -1,9 +1,7 @@
 package it.unibo.agar.view
 
-import it.unibo.agar.distributed.GameManager
 import it.unibo.agar.model.{Food, Player, World}
 
-import java.awt.Color
 import java.awt.Graphics2D
 
 import scala.swing.*

@@ -1,21 +1,17 @@
 package it.unibo.agar.controller
 
-import akka.actor.typed.{ActorSystem, Behavior, SupervisorStrategy}
+import akka.actor.typed.SupervisorStrategy
 import akka.actor.typed.scaladsl.Behaviors
-import akka.cluster.typed.{Cluster, ClusterSingleton, SingletonActor}
+import akka.cluster.typed.{ClusterSingleton, SingletonActor}
 
 import it.unibo.agar.{seeds, startupWithRole}
 import it.unibo.agar.distributed.players.*
 import it.unibo.agar.distributed.{FoodManager, GameManager, GlobalViewActor}
-import it.unibo.agar.model.{AIMovement, GameInitializer, Player}
+import it.unibo.agar.model.{GameInitializer, Player}
 import it.unibo.agar.view.GlobalView
 
 import scala.swing.Swing
 import scala.concurrent.duration.*
-import java.awt.Window
-import java.util.Timer
-import java.util.TimerTask
-
 
 object Main:
 
@@ -74,8 +70,7 @@ object Main:
     val system = startupWithRole("user", 0)(Behaviors.ignore)
     val gmProxy = ClusterSingleton(system).init(
       SingletonActor(Behaviors.empty, "GameManager")
-    ) /* Akka riconosce che nel cluster c'è già un singleton registrato con il nome 
-    GameManager, quindi otteniamo un ClusterSingletonProxy */
+    )
     system.systemActorOf(UserActor(userId, gmProxy), "actor-" + userId)
 
   /** runMain it.unibo.agar.controller.mainAIPlayer */

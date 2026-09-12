@@ -1,6 +1,5 @@
 package it.unibo.agar.distributed
 
-import akka.cluster.typed.{Cluster, Leave}
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.Behaviors
 
@@ -37,8 +36,7 @@ object GameManager:
           w.players.find(_.mass > endGameThreshold) match
             case Some(winner) =>
               v.foreach(_ ! GameOver(winner.id))
-              gameOverStatus(w.players.size, 0) // any messages still in the mailbox become dead letters
-            // and the actor cannot receive new messages anymore
+              Behaviors.stopped
             case None =>
               v.foreach(_ ! WorldSnapshot(w))
               active(w, v, d)
@@ -99,9 +97,6 @@ object GameManager:
           case Tick =>
             val newWorld = updateWorldCollisions(world)
             checkChampionAndNextState(newWorld, views, directions)
-
-          case _ =>
-            Behaviors.same
         }
 
         // Start the actor with the initial empty state
@@ -126,25 +121,6 @@ object GameManager:
             .removePlayers(playersEatable)
             .removeFoods(foodEatable)
         case None => currentWorld
-    }
-
-  /** When GameManager find a winner, it changes behavior */
-  private def gameOverStatus(expected: Int, received: Int): Behavior[GameMessage] =
-    Behaviors.setup { ctx =>
-      Behaviors.receiveMessage {
-        case GameOverPlayerLeft(id, nodeAddress) =>
-          val updated = received + 1
-          ctx.log.info(s"\n\nGameManager received GameOverPlayerLeft: $updated/$expected, $id is preparing to leave the cluster")
-          Cluster(ctx.system).manager ! Leave(nodeAddress)
-          if (updated == expected) {
-            Behaviors.stopped
-          } else {
-            gameOverStatus(expected, updated)
-          }
-
-        case _ => // Ignore any other message
-          Behaviors.same
-      }
     }
 
 

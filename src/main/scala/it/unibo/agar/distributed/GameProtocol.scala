@@ -13,7 +13,6 @@ case class NewFood(food: Food) extends GameMessage
 case class PlayerMove(aiId: String, direction: Direction) extends GameMessage
 case class ViewLeft(view: ActorRef[StandardViewMessage]) extends GameMessage
 case class PlayerLeft(userId: String, view: ActorRef[StandardViewMessage]) extends GameMessage
-case class GameOverPlayerLeft(id: String, nodeAddress: Address) extends GameMessage
 case object Tick extends GameMessage with AIPlayerMsg 
 
 sealed trait FoodMessage extends Message
